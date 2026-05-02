@@ -24,7 +24,7 @@ namespace CupkekGames.Combat
     [TextAreaAttribute] public string Description;
     public Sprite Icon;
 
-    [SerializeReference, SubclassSelector]
+    [SerializeReference]
     public CombatTargetSelection TargetSelection = new CombatTargetSelectionPrimaryTarget();
 
     public static void AttackTarget(ICombatSettings combatSettings, ICombatManager manager, CombatUnit attacker, float attack,

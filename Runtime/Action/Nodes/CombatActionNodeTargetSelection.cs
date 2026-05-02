@@ -9,7 +9,7 @@ namespace CupkekGames.Combat
 {
   public class CombatActionNodeTargetSelection : BTNodeDecorator
   {
-    [SerializeReference, SubclassSelector] private CombatTargetSelection _targetSelection;
+    [SerializeReference] private CombatTargetSelection _targetSelection;
     [SerializeField] private bool _clear = true;
     public CombatActionNodeTargetSelection(CombatTargetSelection targetSelection, bool clear)
     {
