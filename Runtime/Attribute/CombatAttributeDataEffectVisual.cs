@@ -21,7 +21,7 @@ namespace CupkekGames.Combat
 
         [Tooltip("Combat attribute effects")] public AttributeEffect AttributeEffect = new AttributeEffect();
 
-        [Tooltip("Duration in seconds (0 = permanent for scout duration, -1 = infinite)")]
+        [Tooltip("Duration in seconds (0 = caller decides, -1 = infinite)")]
         public float Duration = 0f;
 
         [Tooltip("Icon for this effect (optional)")]

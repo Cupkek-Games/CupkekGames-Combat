@@ -4,7 +4,8 @@ namespace CupkekGames.Combat
 {
   /// <summary>
   /// Abstracts the lookup of <see cref="UnitDefinitionSO"/> instances by key and team.
-  /// Team 0 = heroes, other teams = enemies.
+  /// Team is a caller-defined faction id; the provider may use it as a partition key
+  /// (e.g. separate catalogs per faction).
   /// </summary>
   public interface IUnitSOProvider
   {
