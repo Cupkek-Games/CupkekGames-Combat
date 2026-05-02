@@ -1,0 +1,36 @@
+{
+    "name": "CupkekGames.Combat.Editor",
+    "rootNamespace": "CupkekGames.Combat.Editor",
+    "references": [
+        "GUID:1c8a1107e14a7f440b63d2aaf0d317d2",
+        "GUID:4d0a4020d4304c2eb6ba6c7ede9ce947",
+        "GUID:2d7a945d253a4e429c105dcfc2333ce4",
+        "GUID:f8431b30fb844d5e90a7e9aa9b85b7fc",
+        "GUID:aa6539cffd9044b9aa2dc37aa2c66ef0",
+        "GUID:b8f41375d57f42079c1d8dece8bd7277",
+        "GUID:b89700823dd24fd4bb5d626de398c8e9",
+        "GUID:dced415b883e4520a8a465c931d081e3",
+        "GUID:8f77594f32d14e40b107e8394633124d",
+        "GUID:4c33768f512cd6845b7f12462e3175df",
+        "GUID:ab7612e7fe1d7e64ab54a584495caa06",
+        "GUID:c638d9e1907db5c458288a361efefb01",
+        "GUID:c81485117be9f8d47b2f1ff6cbcb3610",
+        "GUID:d495f598b6f18504ab8135da82301c9f",
+        "GUID:87dd79b08b4b3ec4b9fe695ce817bd86",
+        "GUID:c7e3bf78242d30749848d6c590ab9cb1",
+        "GUID:c95c4fa533d6fdb47871e2223c77f6d0",
+        "GUID:7aa751bf60c77fa489e195763cb7875e",
+        "GUID:6dfb60cfba2c9d24d97f393c4cac15ae"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

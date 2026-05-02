@@ -1,0 +1,20 @@
+{
+  "name": "com.cupkekgames.combat",
+  "displayName": "CupkekGames Combat",
+  "version": "0.1.0",
+  "author": {
+    "name": "CupkekGames",
+    "url": "https://www.docs.cupkek.games"
+  },
+  "unity": "6000.0",
+  "documentationUrl": "https://docs.cupkek.games/",
+  "description": "Turn-based combat framework: CombatUnit (Health/Mana/Buffs/Shield/AI), CombatActionSO + action node behaviour-trees (Damage/Heal/Shield/StatusEffect/Projectile/Indicator), CombatAttributeRegistrySO + AttributeSet, target selection, status effects, projectiles, threat table, ICombatRules + ICombatSettings extension hooks.",
+  "keywords": [
+    "Combat",
+    "TurnBased",
+    "RPG",
+    "BehaviourTree",
+    "CupkekGames"
+  ],
+  "dependencies": {}
+}
