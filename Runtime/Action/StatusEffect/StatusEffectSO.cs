@@ -1,6 +1,5 @@
+using System.Collections.Generic;
 using UnityEngine;
-using Cysharp.Threading.Tasks;
-using CupkekGames.Data;
 using CupkekGames.Luna;
 using CupkekGames.Data.Primitives;
 using CupkekGames.VFX;
@@ -18,30 +17,28 @@ namespace CupkekGames.Combat
     public bool HasTier;
     public UIColor Color;
     [SerializeField] public VFXBundle VFXBundle;
-    [SerializeField] private StatusEffectBehaviorSO[] _behaviors;
+
+    [SerializeReference] private List<IStatusEffectBehaviorFeature> _behaviors = new List<IStatusEffectBehaviorFeature>();
 
     public void OnStart(ICombatSettings combatSettings, ICombatManager manager,
       CombatUnit caster, CombatUnit primaryTarget, int skillLevel)
     {
-      if (_behaviors != null)
-        foreach (var b in _behaviors)
-          b.OnStart(combatSettings, manager, caster, primaryTarget, skillLevel);
+      foreach (IStatusEffectBehaviorFeature b in _behaviors)
+        b?.OnStart(combatSettings, manager, caster, primaryTarget, skillLevel);
     }
 
     public void OnTick(ICombatSettings combatSettings, ICombatManager manager,
       CombatUnit caster, CombatUnit primaryTarget, int skillLevel)
     {
-      if (_behaviors != null)
-        foreach (var b in _behaviors)
-          b.OnTick(combatSettings, manager, caster, primaryTarget, skillLevel);
+      foreach (IStatusEffectBehaviorFeature b in _behaviors)
+        b?.OnTick(combatSettings, manager, caster, primaryTarget, skillLevel);
     }
 
     public void OnEnd(ICombatSettings combatSettings, ICombatManager manager,
       CombatUnit caster, CombatUnit primaryTarget, int skillLevel)
     {
-      if (_behaviors != null)
-        foreach (var b in _behaviors)
-          b.OnEnd(combatSettings, manager, caster, primaryTarget, skillLevel);
+      foreach (IStatusEffectBehaviorFeature b in _behaviors)
+        b?.OnEnd(combatSettings, manager, caster, primaryTarget, skillLevel);
     }
 
     public string GetName(int skillLevel)

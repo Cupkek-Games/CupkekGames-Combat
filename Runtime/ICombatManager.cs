@@ -9,9 +9,7 @@ namespace CupkekGames.Combat
     public interface ICombatManager
     {
         ICombatUnitManager UnitManager { get; }
-        IDamagePopup DamagePopup { get; }
-        IHealPopup HealPopup { get; }
-        IStatusPopup StatusPopup { get; }
+        IPopupManager PopupManager { get; }
         EventDatabaseCombat EventDatabase { get; }
         CombatUltimateManager CombatUltimateManager { get; }
         IIndicatorPool IndicatorPool { get; }

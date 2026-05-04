@@ -2,14 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using CupkekGames.Data;
 using CupkekGames.ShapeDrawing;
 using CupkekGames.TimeSystem;
 using UnityEngine;
 
 namespace CupkekGames.Combat
 {
+  /// <summary>
+  /// Polymorphic target-selection slot on a <see cref="CombatActionSO"/>. Implements <see cref="IFeature"/>
+  /// so Luna's generic <c>FeatureDrawer</c> handles the inspector dropdown — no custom drawer needed.
+  /// </summary>
   [Serializable]
-  public class CombatTargetSelection
+  public class CombatTargetSelection : IFeature
   {
     public float Range;
     public bool Self;
@@ -116,6 +121,12 @@ namespace CupkekGames.Combat
       }
 
       return FilterTargets(caster, result);
+    }
+
+    public virtual IFeature CloneFeature()
+    {
+      // Target selection has no per-instance mutable state at runtime — sharing the authored instance is safe.
+      return this;
     }
   }
 }

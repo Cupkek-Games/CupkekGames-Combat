@@ -8,6 +8,7 @@ using CupkekGames.BehaviourTrees;
 using CupkekGames.Data;
 using CupkekGames.RPGStats;
 using CupkekGames.Data.Primitives;
+using CupkekGames.TextPopup;
 
 namespace CupkekGames.Combat
 {
@@ -69,7 +70,7 @@ namespace CupkekGames.Combat
       {
         CancellationToken cancellationToken = ctx.CreateTargetLinkedToken(target.DeathToken.Token);
 
-        ctx.CombatManager.HealPopup.ShowShield(target.CombatUnitGameObject.HealthBarTransform.position, damage);
+        ctx.CombatManager.PopupManager.Show(PopupKinds.Shield, target.CombatUnitGameObject.HealthBarTransform.position, damage);
 
         CombatUnitShieldNode shield = new CombatUnitShieldNode(damage, _id.Value(), attributeEffectRuntime);
 

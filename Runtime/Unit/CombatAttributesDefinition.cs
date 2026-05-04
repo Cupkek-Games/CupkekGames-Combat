@@ -24,14 +24,14 @@ namespace CupkekGames.Combat
         [SerializeField] private ElementTypeDefinitionSO _element;
         [SerializeField] private DamageTypeDefinitionSO _damageType;
         [SerializeField] private AttributeSet _baseAttributes = new();
-        [SerializeField] private CombatAttributeScaling _levelScaling = new();
+        [SerializeField] private AttributeScaling _levelScaling = new();
         [SerializeField] private CombatUnitTierSO _tier;
         [SerializeField] private List<ActionSlot> _actionSlots = new();
 
         public ElementTypeDefinitionSO Element { get => _element; set => _element = value; }
         public DamageTypeDefinitionSO DamageType { get => _damageType; set => _damageType = value; }
         public AttributeSet BaseAttributes { get => _baseAttributes; set => _baseAttributes = value; }
-        public CombatAttributeScaling LevelScaling { get => _levelScaling; set => _levelScaling = value; }
+        public AttributeScaling LevelScaling { get => _levelScaling; set => _levelScaling = value; }
         public CombatUnitTierSO Tier { get => _tier; set => _tier = value; }
         public List<ActionSlot> ActionSlots { get => _actionSlots; set => _actionSlots = value; }
 

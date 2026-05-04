@@ -20,8 +20,8 @@ namespace CupkekGames.Combat
       {
         CancellationToken cancellationToken = ctx.CreateTargetLinkedToken(target.DeathToken.Token, target.InterruptToken.Token);
 
-        ICombatAnimations combatAnimations = target.CombatUnitGameObject.CombatAnimations;
-        combatAnimations?.PlayAnimationWithReturnToIdle(_animationClip, _fadeDuration, cancellationToken);
+        IAnimationStateController animController = target.CombatUnitGameObject.AnimationController;
+        animController?.PlayClipWithReturnToIdle(_animationClip, _fadeDuration, cancellationToken);
       }
 
       return BTNodeRuntimeState.Success;

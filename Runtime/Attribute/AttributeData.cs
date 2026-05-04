@@ -1,53 +1,71 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using CupkekGames.RPGStats;
 
 namespace CupkekGames.Combat
 {
-  /// <summary>
-  /// Ordered combat attribute snapshot (indices align with <see cref="CombatAttributeRegistrySO.All"/>).
-  /// </summary>
-  [Serializable]
-  public class AttributeData
-  {
-    [SerializeField] private List<float> _values = new();
-
-    public AttributeData() { }
-
-    public AttributeData(AttributeData other)
+    /// <summary>Per-attribute value pair, keyed by stable <see cref="AttributeDefinitionSO"/> name.</summary>
+    [Serializable]
+    public class AttributeValueEntry
     {
-      if (other?._values != null)
-        _values = new List<float>(other._values);
+        public string AttributeKey;
+        public float Value;
     }
 
-    public int Count => _values.Count;
-
-    public float GetValue(int index)
+    /// <summary>
+    /// Combat attribute snapshot keyed by stable <see cref="AttributeDefinitionSO"/> name (catalog key).
+    /// Replaces the old positional <c>List&lt;float&gt;</c> shape so reordering the attribute registry
+    /// doesn't corrupt saved snapshots.
+    /// </summary>
+    [Serializable]
+    public class AttributeData
     {
-      if (index < 0 || index >= _values.Count)
-        return 0f;
-      return _values[index];
+        [SerializeField] private List<AttributeValueEntry> _values = new();
+        public IReadOnlyList<AttributeValueEntry> Values => _values;
+        public int Count => _values.Count;
+
+        public AttributeData() { }
+
+        public AttributeData(AttributeData other)
+        {
+            if (other?._values == null) return;
+            foreach (AttributeValueEntry e in other._values)
+                _values.Add(new AttributeValueEntry { AttributeKey = e.AttributeKey, Value = e.Value });
+        }
+
+        public float GetValue(string attributeKey)
+        {
+            if (string.IsNullOrEmpty(attributeKey)) return 0f;
+            for (int i = 0; i < _values.Count; i++)
+            {
+                if (_values[i].AttributeKey == attributeKey) return _values[i].Value;
+            }
+            return 0f;
+        }
+
+        public float GetValue(AttributeDefinitionSO attribute) =>
+            attribute != null ? GetValue(attribute.name) : 0f;
+
+        public void SetValue(string attributeKey, float value)
+        {
+            if (string.IsNullOrEmpty(attributeKey)) return;
+            for (int i = 0; i < _values.Count; i++)
+            {
+                if (_values[i].AttributeKey == attributeKey)
+                {
+                    _values[i].Value = value;
+                    return;
+                }
+            }
+            _values.Add(new AttributeValueEntry { AttributeKey = attributeKey, Value = value });
+        }
+
+        public void SetValue(AttributeDefinitionSO attribute, float value)
+        {
+            if (attribute != null) SetValue(attribute.name, value);
+        }
+
+        public void Clear() => _values.Clear();
     }
-
-    public void AddValue(float value) => _values.Add(value);
-
-    public void Clear() => _values.Clear();
-
-    public void EnsureCount(int count)
-    {
-      while (_values.Count < count)
-        _values.Add(0f);
-      if (_values.Count > count)
-        _values.RemoveRange(count, _values.Count - count);
-    }
-
-    public void SetValue(int index, float value)
-    {
-      if (index < 0)
-        return;
-      while (_values.Count <= index)
-        _values.Add(0f);
-      _values[index] = value;
-    }
-  }
 }

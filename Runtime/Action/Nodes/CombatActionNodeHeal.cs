@@ -6,6 +6,7 @@ using System.Threading;
 using CupkekGames.Luna;
 using CupkekGames.BehaviourTrees;
 using CupkekGames.RPGStats;
+using CupkekGames.TextPopup;
 
 namespace CupkekGames.Combat
 {
@@ -29,7 +30,7 @@ namespace CupkekGames.Combat
 
       foreach (CombatUnit target in GetTargetList(ctx.Caster, ctx.TargetList))
       {
-        ctx.CombatManager.HealPopup.ShowHeal(target.CombatUnitGameObject.HealthBarTransform.position, damage);
+        ctx.CombatManager.PopupManager.Show(PopupKinds.Heal, target.CombatUnitGameObject.HealthBarTransform.position, damage);
         target.Health.Heal(damage, ctx.Caster);
       }
 

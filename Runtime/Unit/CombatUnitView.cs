@@ -20,8 +20,8 @@ namespace CupkekGames.Combat
   public class CombatUnitView : UnitView
   {
     // Combat-specific components
-    private ICombatAnimations _combatAnimations;
-    public ICombatAnimations CombatAnimations => _combatAnimations;
+    private IAnimationStateController _animationController;
+    public IAnimationStateController AnimationController => _animationController;
     private IAnimationEngine _animationEngine;
     public IAnimationEngine AnimationEngine => _animationEngine;
     private IAnimationTimeController _animationTimeController;
@@ -59,7 +59,7 @@ namespace CupkekGames.Combat
     {
       base.Awake(); // UnitView.Awake — refreshes renderer cache
 
-      _combatAnimations = GetComponentInChildren<ICombatAnimations>();
+      _animationController = GetComponentInChildren<IAnimationStateController>();
       _animationEngine = GetComponentInChildren<IAnimationEngine>();
       _animationTimeController = GetComponentInChildren<IAnimationTimeController>();
       _equipments = GetComponent<CharacterVisualAccessories>();
@@ -190,24 +190,24 @@ namespace CupkekGames.Combat
         return;
       }
 
-      _combatAnimations?.PlayDeath();
+      _animationController?.Play(AnimationKinds.Death);
     }
 
     private void OnWin()
     {
-      if (gameObject == null || _combatAnimations == null)
+      if (gameObject == null || _animationController == null)
       {
         return;
       }
 
-      _combatAnimations.PlayWin();
+      _animationController.Play(AnimationKinds.Win);
     }
 
     public void TakeDamageSquashAndStretch(float bumpAmount)
     {
-      if (_combatAnimations != null)
+      if (_animationController != null)
       {
-        SquashAndStretch.TakeDamage(_combatAnimations.Transform, bumpAmount, 0.1f);
+        SquashAndStretch.TakeDamage(_animationController.Transform, bumpAmount, 0.1f);
       }
     }
 

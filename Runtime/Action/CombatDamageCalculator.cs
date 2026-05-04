@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using CupkekGames.RPGStats;
+using CupkekGames.TextPopup;
 
 namespace CupkekGames.Combat
 {
@@ -106,7 +107,11 @@ namespace CupkekGames.Combat
             CombatUnitView combatUnitGameObject = target.CombatUnitGameObject;
             Vector3 targetPos = combatUnitGameObject.HealthBarTransform.position;
 
-            manager.DamagePopup.ShowDamage(targetPos, result.Damage, result.ElementMultiplier, result.IsCrit);
+            manager.PopupManager.Show(
+                PopupKinds.DamageVariant(result.ElementMultiplier),
+                targetPos,
+                result.Damage,
+                new DamagePopupContext { IsCrit = result.IsCrit });
 
             combatUnitGameObject.ShaderColorController
               .AddColor(visualSettings.HitColor, visualSettings.HitColorWeight, visualSettings.HitColorDurationMS).Forget();
