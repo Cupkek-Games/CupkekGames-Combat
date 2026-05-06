@@ -64,7 +64,7 @@ namespace CupkekGames.Combat
           _indicatorColor);
 
         RenderFeatureManager renderFeatureManager = ServiceLocator.Get<RenderFeatureManager>();
-        renderFeatureManager.UnDarkenAsync(_indicator.gameObject, true);
+        renderFeatureManager.UnDarkenAsync(_indicator.gameObject, true).Forget();
       }
       else
       {

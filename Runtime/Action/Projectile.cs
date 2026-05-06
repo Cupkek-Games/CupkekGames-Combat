@@ -146,7 +146,7 @@ namespace CupkekGames.Combat
         collisionHandler.Setup(caster, OnProjectileCollision, _destroyOnCollision, _collisionRadius);
       }
 
-      renderFeatureManager.UnDarkenAsync(projectile, true);
+      renderFeatureManager.UnDarkenAsync(projectile, true).Forget();
 
       projectile.SetActive(true);
 
