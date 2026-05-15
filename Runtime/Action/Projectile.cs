@@ -5,6 +5,7 @@ using System;
 using System.Threading;
 using System.Collections.Generic;
 using CupkekGames.BehaviourTrees;
+using CupkekGames.Graphs;
 using CupkekGames.TimeSystem;
 using CupkekGames.AddressableAssets;
 using CupkekGames.SceneManagement;
@@ -40,7 +41,7 @@ namespace CupkekGames.Combat
 
     private GameObjectPool _projectilePool = null;
     private BTNode _child;
-    private Dictionary<string, object> _blackboard;
+    private GraphFrame _frame;
 
     public void Prewarm(GameObject parent)
     {
@@ -77,13 +78,13 @@ namespace CupkekGames.Combat
       _flashPrefab?.Dispose();
       _projectilePool = null;
       _child = null;
-      _blackboard = null;
+      _frame = null;
     }
 
     public async UniTask PlayProjectile(
       CombatUnit caster,
       CombatUnit target,
-      Dictionary<string, object> Blackboard,
+      GraphFrame frame,
       BTNode Child,
       CancellationToken globalCancelToken,
       CancellationToken targetCancelToken,
@@ -101,7 +102,7 @@ namespace CupkekGames.Combat
       }
 
       _child = Child;
-      _blackboard = Blackboard;
+      _frame = frame;
 
       Transform spawnTransform = caster.CombatUnitGameObject.Center.transform;
       spawnTransform.GetPositionAndRotation(out Vector3 startPosition, out Quaternion startRotation);
@@ -203,7 +204,7 @@ namespace CupkekGames.Combat
 
       if (!_withCollision)
       {
-        _child.UpdateNode(ref _blackboard, 0);
+        _child.UpdateNode(_frame, 0);
       }
     }
 
@@ -261,9 +262,9 @@ namespace CupkekGames.Combat
       {
         targetUnit
       };
-      _blackboard["TargetList"] = targetList;
+      _frame.SetGlobal("TargetList", targetList);
 
-      _child.UpdateNode(ref _blackboard, 0);
+      _child.UpdateNode(_frame, 0);
     }
   }
 }

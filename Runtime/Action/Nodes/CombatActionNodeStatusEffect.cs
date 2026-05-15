@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using UnityEngine;
 using CupkekGames.BehaviourTrees;
+using CupkekGames.Graphs;
 using System.Threading;
 using CupkekGames.Luna;
 
@@ -12,9 +12,9 @@ namespace CupkekGames.Combat
     [SerializeField] private int[] _level;
     [SerializeField] private float[] _duration;
 
-    protected override BTNodeRuntimeState OnUpdate(ref Dictionary<string, object> Blackboard, float deltaTime)
+    protected override BTNodeRuntimeState OnUpdate(GraphFrame frame, float deltaTime)
     {
-      var ctx = CombatActionContext.From(Blackboard);
+      var ctx = CombatActionContext.From(frame);
       if (ctx.IsCancelled) return BTNodeRuntimeState.Fail;
 
       int level = GetEffectLevel(ctx.SkillLevel);

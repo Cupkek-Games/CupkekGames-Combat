@@ -1,10 +1,10 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using CupkekGames.Luna;
 using CupkekGames.BehaviourTrees;
+using CupkekGames.Graphs;
 
 namespace CupkekGames.Combat
 {
@@ -12,9 +12,9 @@ namespace CupkekGames.Combat
   {
     [SerializeField] private bool _toggle = false;
     [SerializeField] private bool _disable = true;
-    protected override BTNodeRuntimeState OnUpdate(ref Dictionary<string, object> Blackboard, float deltaTime)
+    protected override BTNodeRuntimeState OnUpdate(GraphFrame frame, float deltaTime)
     {
-      var ctx = CombatActionContext.From(Blackboard);
+      var ctx = CombatActionContext.From(frame);
 
       foreach (CombatUnit target in GetTargetList(ctx.Caster, ctx.TargetList))
       {

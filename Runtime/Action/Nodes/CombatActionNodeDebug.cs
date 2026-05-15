@@ -1,7 +1,7 @@
-using System.Collections.Generic;
 using UnityEngine;
 using System.Threading;
 using CupkekGames.BehaviourTrees;
+using CupkekGames.Graphs;
 using CupkekGames.RPGStats;
 
 namespace CupkekGames.Combat
@@ -12,9 +12,9 @@ namespace CupkekGames.Combat
     [SerializeField] private float _attrMultiplier;
     [SerializeField] private DamageTypeDefinitionSO _damageType;
 
-    protected override BTNodeRuntimeState OnUpdate(ref Dictionary<string, object> Blackboard, float deltaTime)
+    protected override BTNodeRuntimeState OnUpdate(GraphFrame frame, float deltaTime)
     {
-      var ctx = CombatActionContext.From(Blackboard);
+      var ctx = CombatActionContext.From(frame);
 
       // Debugging outputs
       Debug.Log("Debugging OnUpdate Method:");

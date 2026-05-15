@@ -1,8 +1,8 @@
-using System.Collections.Generic;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using CupkekGames.BehaviourTrees;
+using CupkekGames.Graphs;
 using CupkekGames.ShapeDrawing;
 using CupkekGames.AddressableAssets;
 using CupkekGames.SceneManagement;
@@ -28,9 +28,9 @@ namespace CupkekGames.Combat
     private CancellationToken? _cancellationToken;
     private bool _isFilled = false;
 
-    protected override BTNodeRuntimeState OnUpdate(ref Dictionary<string, object> Blackboard, float deltaTime)
+    protected override BTNodeRuntimeState OnUpdate(GraphFrame frame, float deltaTime)
     {
-      var ctx = CombatActionContext.From(Blackboard);
+      var ctx = CombatActionContext.From(frame);
 
       if (!_cancellationToken.HasValue)
       {
@@ -78,16 +78,17 @@ namespace CupkekGames.Combat
           _isFilled = true;
 
           // Update Targets
-          CombatActionNodeTargetUpdate.UpdateTargetList(ref Blackboard);
+          CombatActionNodeTargetUpdate.UpdateTargetList(frame);
 
           _indicator.DelayedDisable(_durationDisable, caster.TimeBundle).Forget();
         }
 
         BTNodeRuntimeState state = BTNodeRuntimeState.Success;
 
-        if (Child != null)
+        var child = GetChild();
+        if (child != null)
         {
-          state = Child.UpdateNode(ref Blackboard, deltaTime);
+          state = child.UpdateNode(frame, deltaTime);
         }
 
         if (state == BTNodeRuntimeState.Success || state == BTNodeRuntimeState.Fail)

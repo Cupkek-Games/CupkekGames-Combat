@@ -16,5 +16,7 @@
     "BehaviourTree",
     "CupkekGames"
   ],
-  "dependencies": {}
+  "dependencies": {
+    "com.cupkekgames.graphs": "0.1.0"
+  }
 }

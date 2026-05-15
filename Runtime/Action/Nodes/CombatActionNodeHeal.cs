@@ -1,10 +1,10 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using CupkekGames.Luna;
 using CupkekGames.BehaviourTrees;
+using CupkekGames.Graphs;
 using CupkekGames.RPGStats;
 using CupkekGames.TextPopup;
 
@@ -15,14 +15,14 @@ namespace CupkekGames.Combat
     [SerializeField] private AttributeModifier[] _damage;
     [SerializeField] private DamageTypeDefinitionSO _damageType;
 
-    protected override BTNodeRuntimeState OnUpdate(ref Dictionary<string, object> Blackboard, float deltaTime)
+    protected override BTNodeRuntimeState OnUpdate(GraphFrame frame, float deltaTime)
     {
       if (_damage.Length == 0)
       {
         return BTNodeRuntimeState.Success;
       }
 
-      var ctx = CombatActionContext.From(Blackboard);
+      var ctx = CombatActionContext.From(frame);
 
       AttributeModifier modifier = GetDamageValue(ctx.SkillLevel);
 

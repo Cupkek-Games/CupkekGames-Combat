@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Threading;
 using System.Text.RegularExpressions;
-using System.Collections.ObjectModel;
 using CupkekGames.BehaviourTrees;
+using CupkekGames.Graphs;
 using CupkekGames.ShapeDrawing;
 using CupkekGames.TimeSystem;
 using CupkekGames.RPGStats;
@@ -79,7 +79,7 @@ namespace CupkekGames.Combat
       return ReplacePlaceholders(Description, Nodes, skillLevel, caster, TargetSelection);
     }
 
-    public static string ReplacePlaceholders(string input, ReadOnlyCollection<BTNode> nodes, int skillLevel,
+    public static string ReplacePlaceholders(string input, IReadOnlyList<GraphNodeSO> nodes, int skillLevel,
       CombatUnit caster, CombatTargetSelection TargetSelection)
     {
       string result = NodePlaceholderRegex.Replace(input, match =>

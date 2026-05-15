@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using CupkekGames.BehaviourTrees;
 using CupkekGames.Cameras;
+using CupkekGames.Graphs;
 using UnityEngine;
 
 namespace CupkekGames.Combat
@@ -11,9 +11,9 @@ namespace CupkekGames.Combat
     [SerializeField] private float _intensity = 0.2f;
     [SerializeField] private float _duration = 0.4f;
 
-    protected override BTNodeRuntimeState OnUpdate(ref Dictionary<string, object> Blackboard, float deltaTime)
+    protected override BTNodeRuntimeState OnUpdate(GraphFrame frame, float deltaTime)
     {
-      var ctx = CombatActionContext.From(Blackboard);
+      var ctx = CombatActionContext.From(frame);
 
       ctx.CombatManager.CinemachineManager.ShakeCamera(_kind, _intensity, _duration);
 

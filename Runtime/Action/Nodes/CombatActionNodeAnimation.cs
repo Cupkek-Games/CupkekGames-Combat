@@ -1,7 +1,7 @@
-using System.Collections.Generic;
 using UnityEngine;
 using CupkekGames.Animations;
 using CupkekGames.BehaviourTrees;
+using CupkekGames.Graphs;
 using System.Threading;
 
 namespace CupkekGames.Combat
@@ -11,9 +11,9 @@ namespace CupkekGames.Combat
     [SerializeField] private AnimationClip _animationClip;
     [SerializeField] private float _fadeDuration = 0.25f;
 
-    protected override BTNodeRuntimeState OnUpdate(ref Dictionary<string, object> Blackboard, float deltaTime)
+    protected override BTNodeRuntimeState OnUpdate(GraphFrame frame, float deltaTime)
     {
-      var ctx = CombatActionContext.From(Blackboard);
+      var ctx = CombatActionContext.From(frame);
       if (ctx.IsCancelled) return BTNodeRuntimeState.Fail;
 
       foreach (CombatUnit target in GetTargetList(ctx.Caster, ctx.TargetList))

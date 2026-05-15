@@ -1,9 +1,9 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using CupkekGames.BehaviourTrees;
+using CupkekGames.Graphs;
 using CupkekGames.AddressableAssets;
 using CupkekGames.SceneManagement;
 using CupkekGames.Sequencer;
@@ -30,9 +30,9 @@ namespace CupkekGames.Combat
 
       _projectile.Dispose();
     }
-    protected override BTNodeRuntimeState OnUpdate(ref Dictionary<string, object> Blackboard, float deltaTime)
+    protected override BTNodeRuntimeState OnUpdate(GraphFrame frame, float deltaTime)
     {
-      var ctx = CombatActionContext.From(Blackboard);
+      var ctx = CombatActionContext.From(frame);
       if (ctx.IsCancelled) return BTNodeRuntimeState.Fail;
 
       if (ctx.TargetList.Count == 0)
@@ -49,7 +49,7 @@ namespace CupkekGames.Combat
         return BTNodeRuntimeState.Fail;
       }
 
-      _projectile.PlayProjectile(ctx.Caster, target, Blackboard, Child, ctx.CombatCancelToken, target.DeathToken.Token, ctx.Caster.TimeBundle, renderFeatureManager).Forget();
+      _projectile.PlayProjectile(ctx.Caster, target, frame, GetChild(), ctx.CombatCancelToken, target.DeathToken.Token, ctx.Caster.TimeBundle, renderFeatureManager).Forget();
 
       return BTNodeRuntimeState.Success;
     }

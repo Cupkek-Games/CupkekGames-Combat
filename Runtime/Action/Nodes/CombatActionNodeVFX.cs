@@ -1,9 +1,9 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using CupkekGames.BehaviourTrees;
+using CupkekGames.Graphs;
 using CupkekGames.TimeSystem;
 using CupkekGames.AddressableAssets;
 using CupkekGames.SceneManagement;
@@ -27,9 +27,9 @@ namespace CupkekGames.Combat
       _vfxBundle.Prewarm(parent);
     }
 
-    protected override BTNodeRuntimeState OnUpdate(ref Dictionary<string, object> Blackboard, float deltaTime)
+    protected override BTNodeRuntimeState OnUpdate(GraphFrame frame, float deltaTime)
     {
-      var ctx = CombatActionContext.From(Blackboard);
+      var ctx = CombatActionContext.From(frame);
       if (ctx.IsCancelled) return BTNodeRuntimeState.Fail;
 
       RenderFeatureManager renderFeatureManager = ServiceLocator.Get<RenderFeatureManager>();

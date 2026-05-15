@@ -1,28 +1,36 @@
 using System.Collections.Generic;
 using System.Threading;
+using CupkekGames.Graphs;
 
 namespace CupkekGames.Combat
 {
     /// <summary>
-    /// Provides strongly-typed access to the combat action behaviour tree blackboard.
-    /// Created once per action in CombatActionRunner.Setup() and stored under the "Context" key.
+    /// Strongly-typed accessors over the action's <see cref="GraphFrame"/>.
+    /// One instance per scope: the runner creates the root context during
+    /// Setup; decorators that want to scope a value to their child branch
+    /// (target selection / target update) push a child frame and create a
+    /// new context bound to it, then store that nested context under the
+    /// "Context" key on the local frame — descendants of the decorator
+    /// resolve <see cref="From"/> to the scoped instance instead of the
+    /// root one.
     /// </summary>
     public class CombatActionContext
     {
-        private readonly Dictionary<string, object> _blackboard;
-        private CancellationTokenSource _linkedCts;
+        readonly GraphFrame _frame;
+        CancellationTokenSource _linkedCts;
 
-        public CombatActionContext(Dictionary<string, object> blackboard)
+        /// <summary>The frame this context is bound to.</summary>
+        public GraphFrame Frame => _frame;
+
+        public CombatActionContext(GraphFrame frame)
         {
-            _blackboard = blackboard;
+            _frame = frame;
         }
 
-        /// <summary>
-        /// Retrieves the CombatActionContext from the blackboard.
-        /// </summary>
-        public static CombatActionContext From(Dictionary<string, object> blackboard)
+        /// <summary>Resolve the most-scoped Context visible from <paramref name="frame"/>.</summary>
+        public static CombatActionContext From(GraphFrame frame)
         {
-            return (CombatActionContext)blackboard["Context"];
+            return frame != null && frame.TryGet<CombatActionContext>("Context", out var v) ? v : null;
         }
 
         // ─── Core combat data ────────────────────────────────────────────
@@ -34,10 +42,17 @@ namespace CupkekGames.Combat
         public CombatUnit PrimaryTarget => Get<CombatUnit>("PrimaryTarget");
         public int SkillLevel => Get<int>("SkillLevel");
 
+        /// <summary>
+        /// Reads walk the frame chain so a scoped decorator's local
+        /// <c>TargetList</c> is visible to its descendants. Writes go
+        /// to the bound frame's locals — so to scope a list to a branch,
+        /// push a frame, create a new context, then set the list via that
+        /// nested context.
+        /// </summary>
         public List<CombatUnit> TargetList
         {
             get => Get<List<CombatUnit>>("TargetList");
-            set => _blackboard["TargetList"] = value;
+            set => _frame.SetLocal("TargetList", value);
         }
 
         // ─── Cancellation tokens ────────────────────────────────────────
@@ -46,18 +61,11 @@ namespace CupkekGames.Combat
         public CancellationToken CasterDeathToken => GetToken("CancellationTokenCasterDeath");
         public CancellationToken CasterInterruptToken => GetToken("CancellationTokenCasterInterrupt");
 
-        /// <summary>
-        /// Returns true if any caster-level cancellation token has been triggered.
-        /// </summary>
         public bool IsCancelled =>
             CombatCancelToken.IsCancellationRequested ||
             CasterDeathToken.IsCancellationRequested ||
             CasterInterruptToken.IsCancellationRequested;
 
-        /// <summary>
-        /// A linked CancellationToken that triggers when any caster-level token is cancelled.
-        /// Cached after first access per context instance.
-        /// </summary>
         public CancellationToken LinkedCancelToken
         {
             get
@@ -67,22 +75,15 @@ namespace CupkekGames.Combat
                     _linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
                         CombatCancelToken, CasterDeathToken, CasterInterruptToken);
                 }
-
                 return _linkedCts.Token;
             }
         }
 
-        /// <summary>
-        /// Creates a linked token combining all caster tokens with a target death token.
-        /// </summary>
         public CancellationToken CreateTargetLinkedToken(CancellationToken targetDeathToken)
         {
             return CancellationTokenSource.CreateLinkedTokenSource(LinkedCancelToken, targetDeathToken).Token;
         }
 
-        /// <summary>
-        /// Creates a linked token combining all caster tokens with target death and interrupt tokens.
-        /// </summary>
         public CancellationToken CreateTargetLinkedToken(CancellationToken targetDeathToken,
             CancellationToken targetInterruptToken)
         {
@@ -90,9 +91,6 @@ namespace CupkekGames.Combat
                 targetInterruptToken).Token;
         }
 
-        /// <summary>
-        /// Disposes the cached linked CancellationTokenSource. Called on action completion.
-        /// </summary>
         public void Dispose()
         {
             _linkedCts?.Dispose();
@@ -101,14 +99,7 @@ namespace CupkekGames.Combat
 
         // ─── Private helpers ─────────────────────────────────────────────
 
-        private T Get<T>(string key)
-        {
-            return _blackboard.TryGetValue(key, out var val) ? (T)val : default;
-        }
-
-        private CancellationToken GetToken(string key)
-        {
-            return _blackboard.TryGetValue(key, out var val) ? (CancellationToken)val : default;
-        }
+        T Get<T>(string key) => _frame.TryGet<T>(key, out var v) ? v : default;
+        CancellationToken GetToken(string key) => _frame.TryGet<CancellationToken>(key, out var v) ? v : default;
     }
 }

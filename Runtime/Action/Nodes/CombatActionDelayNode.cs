@@ -1,16 +1,15 @@
-using System.Collections.Generic;
 using CupkekGames.BehaviourTrees;
-using UnityEngine;
+using CupkekGames.Graphs;
 
 namespace CupkekGames.Combat
 {
     public class CombatActionDelayNode : DelayNode
     {
         // [SerializeField] private bool _failIfNoTargets = true;
-        protected override bool OnDelayComplete(ref Dictionary<string, object> Blackboard)
+        protected override bool OnDelayComplete(GraphFrame frame)
         {
-            // List<CombatUnit> targets = CombatActionNodeTargetUpdate.UpdateTargetList(ref Blackboard);
-            CombatActionNodeTargetUpdate.UpdateTargetList(ref Blackboard);
+            // List<CombatUnit> targets = CombatActionNodeTargetUpdate.UpdateTargetList(frame);
+            CombatActionNodeTargetUpdate.UpdateTargetList(frame);
 
             // if (_failIfNoTargets)
             // {

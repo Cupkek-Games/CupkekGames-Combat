@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using UnityEngine;
 using CupkekGames.BehaviourTrees;
+using CupkekGames.Graphs;
 
 namespace CupkekGames.Combat
 {
@@ -8,9 +8,9 @@ namespace CupkekGames.Combat
   {
     [SerializeField] private int[] _threat;
 
-    protected override BTNodeRuntimeState OnUpdate(ref Dictionary<string, object> Blackboard, float deltaTime)
+    protected override BTNodeRuntimeState OnUpdate(GraphFrame frame, float deltaTime)
     {
-      var ctx = CombatActionContext.From(Blackboard);
+      var ctx = CombatActionContext.From(frame);
 
       int threat = GetThreat(ctx.SkillLevel);
 

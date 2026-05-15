@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using UnityEngine;
 using CupkekGames.BehaviourTrees;
+using CupkekGames.Graphs;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using PrimeTween;
@@ -14,9 +14,9 @@ namespace CupkekGames.Combat
         [SerializeField] private Ease _ease = Ease.OutSine;
         [SerializeField] private int _avoidancePriority = 51;
 
-        protected override BTNodeRuntimeState OnUpdate(ref Dictionary<string, object> Blackboard, float deltaTime)
+        protected override BTNodeRuntimeState OnUpdate(GraphFrame frame, float deltaTime)
         {
-            var ctx = CombatActionContext.From(Blackboard);
+            var ctx = CombatActionContext.From(frame);
             if (ctx.IsCancelled) return BTNodeRuntimeState.Fail;
 
             CancellationToken cancellationToken = ctx.LinkedCancelToken;

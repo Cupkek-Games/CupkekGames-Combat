@@ -1,11 +1,11 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using CupkekGames.Luna;
 using CupkekGames.BehaviourTrees;
 using CupkekGames.Data;
+using CupkekGames.Graphs;
 using CupkekGames.RPGStats;
 using CupkekGames.Data.Primitives;
 using CupkekGames.TextPopup;
@@ -41,9 +41,9 @@ namespace CupkekGames.Combat
       set => _show = value;
     }
 
-    protected override BTNodeRuntimeState OnUpdate(ref Dictionary<string, object> Blackboard, float deltaTime)
+    protected override BTNodeRuntimeState OnUpdate(GraphFrame frame, float deltaTime)
     {
-      var ctx = CombatActionContext.From(Blackboard);
+      var ctx = CombatActionContext.From(frame);
       if (ctx.IsCancelled) return BTNodeRuntimeState.Fail;
 
       AttributeModifier modifier = GetDamageValue(ctx.SkillLevel);

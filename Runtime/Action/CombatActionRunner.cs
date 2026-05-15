@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
-using System.Threading;
 using System.Collections;
 using System;
 using CupkekGames.BehaviourTrees;
+using CupkekGames.Graphs;
 using CupkekGames.TimeSystem;
 using System.Linq;
 
@@ -52,24 +52,25 @@ namespace CupkekGames.Combat
 
             _runner.ResetTree();
 
-            _runner.Blackboard["CombatActionSO"] = _actionSO;
-            _runner.Blackboard["CombatSettings"] = combatSettings;
-            _runner.Blackboard["CombatManager"] = combatManager;
-            _runner.Blackboard["Caster"] = _caster;
-            _runner.Blackboard["PrimaryTarget"] = primaryTarget;
-            _runner.Blackboard["SkillLevel"] = skillLevel;
+            var bb = _runner.Blackboard;
+            bb["CombatActionSO"] = _actionSO;
+            bb["CombatSettings"] = combatSettings;
+            bb["CombatManager"] = combatManager;
+            bb["Caster"] = _caster;
+            bb["PrimaryTarget"] = primaryTarget;
+            bb["SkillLevel"] = skillLevel;
 
             if (combatManager?.CancelToken != null)
             {
-                _runner.Blackboard["CancellationToken"] = combatManager.CancelToken.Token;
+                bb["CancellationToken"] = combatManager.CancelToken.Token;
             }
 
-            _runner.Blackboard["CancellationTokenCasterDeath"] = _caster.DeathToken.Token;
-            _runner.Blackboard["CancellationTokenCasterInterrupt"] = _caster.InterruptToken.Token;
+            bb["CancellationTokenCasterDeath"] = _caster.DeathToken.Token;
+            bb["CancellationTokenCasterInterrupt"] = _caster.InterruptToken.Token;
 
             _context?.Dispose();
-            _context = new CombatActionContext(_runner.Blackboard);
-            _runner.Blackboard["Context"] = _context;
+            _context = new CombatActionContext(_runner.RootFrame);
+            bb["Context"] = _context;
 
             _firstTargetsCalculated = false;
         }
@@ -90,6 +91,8 @@ namespace CupkekGames.Combat
 
         public void SetTargetList(List<CombatUnit> targets)
         {
+            // Initial seed lives in globals so every branch sees it until a
+            // scoping decorator (TargetSelection / TargetUpdate) shadows it.
             _runner.Blackboard["TargetList"] = targets;
         }
 
@@ -103,8 +106,6 @@ namespace CupkekGames.Combat
         {
             if (!_firstTargetsCalculated)
             {
-                // This is the first time we run the action, so we need to calculate the targets
-
                 List<CombatUnit> targets = GetTargets(combatUnitManager, primaryTarget, debug);
                 if (targets.Count > 0)
                 {
@@ -131,7 +132,6 @@ namespace CupkekGames.Combat
 
             if (state == BTNodeRuntimeState.Success || state == BTNodeRuntimeState.Fail)
             {
-                // reset state
                 _firstTargetsCalculated = false;
             }
 

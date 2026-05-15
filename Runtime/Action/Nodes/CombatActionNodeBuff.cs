@@ -1,10 +1,10 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using CupkekGames.Luna;
 using CupkekGames.BehaviourTrees;
+using CupkekGames.Graphs;
 using CupkekGames.RPGStats;
 
 namespace CupkekGames.Combat
@@ -43,9 +43,9 @@ namespace CupkekGames.Combat
       set => _show = value;
     }
 
-    protected override BTNodeRuntimeState OnUpdate(ref Dictionary<string, object> Blackboard, float deltaTime)
+    protected override BTNodeRuntimeState OnUpdate(GraphFrame frame, float deltaTime)
     {
-      var ctx = CombatActionContext.From(Blackboard);
+      var ctx = CombatActionContext.From(frame);
 
       AttributeEffect attributeEffect = GetAttributeDataEffect(ctx.SkillLevel);
       float duration = GetDuration(ctx.SkillLevel);
