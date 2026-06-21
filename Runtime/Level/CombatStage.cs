@@ -10,8 +10,16 @@ namespace CupkekGames.Combat
   public class CombatStage
   {
     [SerializeField] private int _stage;
-    [SerializeField] private List<CombatWave> _combatWaves;
-    public int Stage => _stage;
+    // No [SerializeField]: Unity can't serialize CombatWave (it's a
+    // Dictionary wrapper), so the attribute was always ignored. JSON
+    // save/load round-trips through the public CombatWaves property
+    // (Newtonsoft populates the get-only list in place).
+    private List<CombatWave> _combatWaves;
+    // Private setter is load-bearing: this type is in the JSON save registry
+    // and the pipeline's PrivateSetterContractResolver can only deserialize a
+    // property that HAS a setter. A get-only expression body serialized out
+    // but silently loaded back as 0.
+    public int Stage { get => _stage; private set => _stage = value; }
     public List<CombatWave> CombatWaves => _combatWaves;
 
     public CombatStage()

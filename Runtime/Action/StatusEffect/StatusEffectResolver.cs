@@ -17,8 +17,10 @@ namespace CupkekGames.Combat
                 ServiceLocator.GetAll<IAssetCatalog<StatusEffectSO>>(CombatConstants.StatusEffectsCatalogId);
             for (int i = 0; i < catalogs.Count; i++)
             {
-                StatusEffectSO def = catalogs[i]?.GetValue(key);
-                if (def != null) return def;
+                // TryGetValue: a miss in one catalog of a multi-catalog probe
+                // is expected and must not trigger GetValue's dev-build warning.
+                if (catalogs[i] != null && catalogs[i].TryGetValue(key, out var obj) && obj is StatusEffectSO def)
+                    return def;
             }
             return null;
         }

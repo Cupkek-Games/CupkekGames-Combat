@@ -1,8 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Newtonsoft.Json;
-using System;
-using Newtonsoft.Json.Linq;
 
 namespace CupkekGames.Combat
 {

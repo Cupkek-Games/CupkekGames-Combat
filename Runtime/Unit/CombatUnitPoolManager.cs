@@ -46,7 +46,8 @@ namespace CupkekGames.Combat
                 Debug.LogError($"CombatUnitPoolManager: No pool for key '{key}'. Call CreatePool first.");
                 return;
             }
-            GameObject instance = pool.Pool.Get();
+            // Get() (not Pool.Get()): skips instances destroyed while pooled.
+            GameObject instance = pool.Get();
             instance.transform.SetPositionAndRotation(position, rotation);
             instance.SetActive(true);
 

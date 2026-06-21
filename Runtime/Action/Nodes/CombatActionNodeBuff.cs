@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using System.Threading;
 using CupkekGames.Luna;
 using CupkekGames.BehaviourTrees;
+using CupkekGames.Data.Primitives;
 using CupkekGames.Graphs;
 using CupkekGames.RPGStats;
 
@@ -11,7 +12,10 @@ namespace CupkekGames.Combat
 {
   public class CombatActionNodeBuff : CombatActionNodeWithTarget
   {
-    [SerializeField] private Guid _id = System.Guid.NewGuid();
+    // System.Guid is not Unity-serializable, so the previous Guid field
+    // silently regenerated on every load. SerializedGuid persists, making
+    // the buff id stable across sessions once the asset is saved.
+    [SerializeField] private SerializedGuid _id = SerializedGuid.NewGUID();
 
     public Guid ID
     {

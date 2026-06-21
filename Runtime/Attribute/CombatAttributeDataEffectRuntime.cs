@@ -10,7 +10,9 @@ using CupkekGames.RPGStats;
 
 namespace CupkekGames.Combat
 {
-  [System.Serializable]
+  // Runtime-only: holds delegates, timers, and events — never serialized by
+  // Unity (no [SerializeField] usage anywhere) nor by the JSON save pipeline
+  // (not in any serialization type registry). Not [Serializable] on purpose.
   public class CombatAttributeDataEffectRuntime
   {
     public AttributeEffect Data;
