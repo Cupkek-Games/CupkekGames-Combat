@@ -42,6 +42,18 @@ namespace CupkekGames.Combat
       }
     }
 
+    public CombatStage(CombatStage other)
+    {
+      _combatWaves = new List<CombatWave>();
+      if (other == null)
+        return;
+      _stage = other._stage;
+      if (other._combatWaves == null)
+        return;
+      foreach (CombatWave wave in other._combatWaves)
+        _combatWaves.Add(wave != null ? new CombatWave(wave) : null);
+    }
+
     public List<CombatUnitReference> GetAllUnits()
     {
       List<CombatUnitReference> result = new();

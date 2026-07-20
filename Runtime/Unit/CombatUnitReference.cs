@@ -11,11 +11,22 @@ namespace CupkekGames.Combat
     [SerializeField] public string Key;
     [SerializeField] public int Level = 1;
 
+    public CombatUnitReference() { }
+
     public CombatUnitReference(int teamId, string key, int level)
     {
       TeamId = teamId;
       Key = key;
       Level = level;
+    }
+
+    public CombatUnitReference(CombatUnitReference other)
+    {
+      if (other == null)
+        return;
+      TeamId = other.TeamId;
+      Key = other.Key;
+      Level = other.Level;
     }
 
     public UnitDefinitionSO GetUnitDefinition(IUnitSOProvider unitSOProvider)
