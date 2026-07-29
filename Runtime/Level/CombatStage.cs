@@ -10,17 +10,13 @@ namespace CupkekGames.Combat
   public class CombatStage
   {
     [SerializeField] private int _stage;
-    // No [SerializeField]: Unity can't serialize CombatWave (it's a
-    // Dictionary wrapper), so the attribute was always ignored. JSON
-    // save/load round-trips through the public CombatWaves property
-    // (Newtonsoft populates the get-only list in place).
-    private List<CombatWave> _combatWaves;
+    [SerializeField] private List<CombatWave> _combatWaves;
     // Private setter is load-bearing: this type is in the JSON save registry
     // and the pipeline's PrivateSetterContractResolver can only deserialize a
     // property that HAS a setter. A get-only expression body serialized out
     // but silently loaded back as 0.
     public int Stage { get => _stage; private set => _stage = value; }
-    public List<CombatWave> CombatWaves => _combatWaves;
+    public List<CombatWave> CombatWaves { get => _combatWaves; private set => _combatWaves = value; }
 
     public CombatStage()
     {
@@ -60,9 +56,9 @@ namespace CupkekGames.Combat
 
       foreach (CombatWave wave in CombatWaves)
       {
-        foreach (System.Collections.Generic.KeyValuePair<Vector2Int, CombatUnitReference> kvp in wave.Wave)
+        foreach (CombatWave.Entry entry in wave.Entries)
         {
-          result.Add(kvp.Value);
+          result.Add(entry.Unit);
         }
       }
 
@@ -105,7 +101,7 @@ namespace CupkekGames.Combat
             for (int y = 0; y < gridSize.y; y++)
             {
               Vector2Int position = new Vector2Int(x, y);
-              if (!combatWave.Wave.ContainsKey(position))
+              if (!combatWave.ContainsKey(position))
               {
                 availablePositions.Add(position);
               }
@@ -113,7 +109,7 @@ namespace CupkekGames.Combat
           }
 
           Vector2Int randomPosition = availablePositions[UnityEngine.Random.Range(0, availablePositions.Count)];
-          combatWave.Wave.Add(randomPosition, combatUnitRef);
+          combatWave.Add(randomPosition, combatUnitRef);
         }
 
         CombatWaves.Add(combatWave);

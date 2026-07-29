@@ -16,7 +16,7 @@ namespace CupkekGames.Combat
       foreach (Vector2Int key in Grid.Keys)
       {
         CombatUnitReference value = Grid.GetValue(key);
-        combatWave.Wave.Add(key, value);
+        combatWave.Add(key, value);
       }
 
       return combatWave;
