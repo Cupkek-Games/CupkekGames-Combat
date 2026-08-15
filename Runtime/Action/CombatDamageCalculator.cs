@@ -104,7 +104,17 @@ namespace CupkekGames.Combat
         {
             target.Health.TakeDamage(result.Damage, attacker);
 
+            // A delayed hit (projectile in flight) can land after the target's
+            // view is gone — died and was despawned/cleaned up meanwhile. The
+            // damage state above still applies; there is nothing left to
+            // visualize, and dereferencing the dead view was an every-battle
+            // NRE surfacing as an unobserved UniTask exception (2026-08-16).
             CombatUnitView combatUnitGameObject = target.CombatUnitGameObject;
+            if (combatUnitGameObject == null)
+            {
+                return;
+            }
+
             Vector3 targetPos = combatUnitGameObject.HealthBarTransform.position;
 
             manager.PopupManager.Show(
