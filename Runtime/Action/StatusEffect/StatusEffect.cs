@@ -7,6 +7,7 @@ using System;
 using CupkekGames.TimeSystem;
 
 using CupkekGames.VFX;
+using Unity.Scripting.LifecycleManagement;
 
 namespace CupkekGames.Combat
 {
@@ -18,9 +19,11 @@ namespace CupkekGames.Combat
   /// <see cref="StatusEffectResolver"/> against the registered <see cref="StatusEffectCatalog"/>.
   /// </summary>
   [System.Serializable]
-  public class StatusEffect : IData
+  public partial class StatusEffect : IData
   {
+    [NoAutoStaticsCleanup]
     public static float INTERVAL_VISUAL = 0.1f;
+    [NoAutoStaticsCleanup]
     public static float INTERVAL_EXECUTE = 1f;
 
     public CatalogKey DefinitionKey;

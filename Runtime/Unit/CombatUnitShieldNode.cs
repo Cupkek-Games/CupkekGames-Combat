@@ -4,11 +4,12 @@ using CupkekGames.Luna;
 using CupkekGames.InventorySystem;
 using CupkekGames.TimeSystem;
 using UnityEngine;
+using Unity.Scripting.LifecycleManagement;
 
 namespace CupkekGames.Combat
 {
     [Serializable]
-    public class CombatUnitShieldNode
+    public partial class CombatUnitShieldNode
     {
         private Guid _id;
         public Guid ID => _id;
@@ -33,6 +34,7 @@ namespace CupkekGames.Combat
         public event Action<int> OnChange;
         public event Action<CombatUnitShieldNode> OnExpire;
         // Display
+        [NoAutoStaticsCleanup]
         public static UIColor Color = new UIColor("amber", UIColorValue.V_400);
         // Buff
         private CombatAttributeDataEffectRuntime _buff;
