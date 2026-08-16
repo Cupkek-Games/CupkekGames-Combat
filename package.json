@@ -1,7 +1,7 @@
 {
   "name": "com.cupkekgames.combat",
   "displayName": "CupkekGames Combat",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "author": {
     "name": "CupkekGames",
     "url": "https://www.docs.cupkek.games"
@@ -17,6 +17,6 @@
     "CupkekGames"
   ],
   "dependencies": {
-    "com.cupkekgames.graphs": "0.4.2"
+    "com.cupkekgames.graphs": "0.5.0"
   }
 }
