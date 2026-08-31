@@ -66,6 +66,14 @@ namespace CupkekGames.Combat
 
     public void StartAI()
     {
+      // A unit without a death token was never initialized (SetupAI) or was
+      // already killed/disposed - starting it would NRE on every tick.
+      if (_caster == null || _caster.DeathToken == null)
+      {
+        Debug.LogError($"[CombatUnitAI] StartAI refused on '{gameObject.name}': the unit is not fully initialized (no death token). Call SetupAI on an initialized unit before StartAI.", this);
+        return;
+      }
+
       if (_debug)
       {
         Debug.Log("StartAI " + gameObject.name);
@@ -119,6 +127,15 @@ namespace CupkekGames.Combat
     {
       if (!_running)
       {
+        return;
+      }
+
+      // The unit was killed/disposed under a still-running AI (KillAI without
+      // StopAI) - stop loudly once instead of NRE-ing per tick in the runner.
+      if (_caster == null || _caster.DeathToken == null)
+      {
+        Debug.LogError($"[CombatUnitAI] '{gameObject.name}' ticked on a dead or uninitialized unit (death token missing) - stopping AI. StopAI must run before the unit is killed/disposed.", this);
+        StopAI(false);
         return;
       }
 
