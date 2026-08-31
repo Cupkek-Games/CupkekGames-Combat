@@ -52,13 +52,13 @@ namespace CupkekGames.Combat
             attack *= elementMultiplier;
 
             float defense = target.GetAttributeValue(damageType.DefenseAttribute);
-            float reduction = combatRules.GetDefenseReduction(defense);
+            float damageTaken = combatRules.GetDamageTakenMultiplier(defense);
 
             DamageContext ctx = new DamageContext
             {
                 IsCrit = isCrit,
                 ElementMultiplier = elementMultiplier,
-                DefenseReduction = reduction,
+                DamageTakenMultiplier = damageTaken,
                 DamageType = damageType,
             };
 
@@ -72,7 +72,7 @@ namespace CupkekGames.Combat
                 }
             }
 
-            int damage = (int)(attack * reduction + 0.5f);
+            int damage = (int)(attack * damageTaken + 0.5f);
 
             // Apply final damage modifiers (after defense)
             if (modifiers != null)

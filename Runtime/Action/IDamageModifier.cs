@@ -13,7 +13,8 @@ namespace CupkekGames.Combat
     {
         public bool IsCrit;
         public float ElementMultiplier;
-        public float DefenseReduction;
+        /// <summary>Fraction of damage that gets through the target's defense (final damage = attack * this).</summary>
+        public float DamageTakenMultiplier;
         public DamageTypeDefinitionSO DamageType;
         public CombatActionSO ActionSO;
     }

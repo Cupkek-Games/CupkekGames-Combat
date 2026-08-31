@@ -7,7 +7,6 @@ namespace CupkekGames.Combat
     {
         // Core combat formula inputs
         int AttackSpeedBase { get; }
-        float BaseCritDmg { get; }
 
         // Element System
         ElementRelationshipTableSO ElementRelationshipTable { get; }
@@ -22,7 +21,16 @@ namespace CupkekGames.Combat
         IReadOnlyList<IDamageModifier> DamageModifiers { get; }
 
         // Methods
-        float GetDefenseReduction(float totalDefense);
+
+        /// <summary>
+        /// Fraction of incoming damage that gets through at the given defense
+        /// value: 1 at defense 0, approaching 0 as defense grows. Final damage
+        /// is <c>attack * thisValue</c>. Renamed from GetDefenseReduction in
+        /// 0.4.1 — the damage path always consumed it as the damage-THROUGH
+        /// multiplier, and the old name inverted its meaning.
+        /// </summary>
+        float GetDamageTakenMultiplier(float totalDefense);
+
         float GetBaseValue(AttributeDefinitionSO attribute);
     }
 }
