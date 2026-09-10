@@ -10,7 +10,8 @@ namespace CupkekGames.Combat
   /// this asset, so authored descriptions carry no rich-text tags of their
   /// own. Rich text cannot read USS variables; copy the theme palette hexes
   /// here so text and UI agree. Icons are sprite names in the panel's text
-  /// settings sprite asset (rendered as <c>&lt;sprite name="..."&gt;</c>).
+  /// settings sprite asset (rendered as <c>&lt;sprite name="..." tint=1&gt;</c>,
+  /// tinted with the surrounding text colour).
   /// </summary>
   [CreateAssetMenu(fileName = "CombatDescriptionStyle", menuName = "CupkekGames/Combat/Combat Description Style")]
   public class CombatDescriptionStyleSO : ScriptableObject
@@ -72,7 +73,7 @@ namespace CupkekGames.Combat
 
     public static string SpriteTag(string spriteName)
     {
-      return string.IsNullOrEmpty(spriteName) ? string.Empty : $"<sprite name=\"{spriteName}\">";
+      return string.IsNullOrEmpty(spriteName) ? string.Empty : $"<sprite name=\"{spriteName}\" tint=1>";
     }
 
     /// <summary>A flat number (no caster to scale it).</summary>
