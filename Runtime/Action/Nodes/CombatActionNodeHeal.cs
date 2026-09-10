@@ -55,9 +55,9 @@ namespace CupkekGames.Combat
       }
 
       CombatDescriptionStyleSO style = rules.DescriptionStyle;
-      string number = CombatActionNodeDamage.ScaledNumber(style, modifier, caster, _damageType);
+      string number = CombatActionNodeDamage.ScaledNumber(style, style.Icon(CombatDescriptionRole.Heal), modifier, caster, _damageType);
 
-      return style.Colorize(CombatDescriptionRole.Heal, $"restores {style.Icon(CombatDescriptionRole.Heal)}{number} health");
+      return style.Colorize(CombatDescriptionRole.Heal, $"restores {number} health");
     }
 
     public string GetDescriptionDuration(int skillLevel, CombatUnit caster, ICombatRules rules)

@@ -76,25 +76,28 @@ namespace CupkekGames.Combat
       return string.IsNullOrEmpty(spriteName) ? string.Empty : $"<sprite name=\"{spriteName}\" tint=1>";
     }
 
-    /// <summary>A flat number (no caster to scale it).</summary>
-    public string Number(int value)
+    /// <summary>
+    /// A flat number (no caster to scale it): the fragment's icon, then the
+    /// value in bold. <paramref name="icon"/> is an inline sprite tag (may be
+    /// empty).
+    /// </summary>
+    public string Number(string icon, int value)
     {
-      return $"<b>{value}</b>";
+      return $"{icon}<b>{value}</b>";
     }
 
     /// <summary>
-    /// A scaled number: the total in bold, then the base + attribute
-    /// breakdown at reduced size when enabled. <paramref name="scalingIcon"/>
-    /// is the attribute's inline icon tag (may be empty).
+    /// A scaled number: icon, total in bold, then the base + attribute
+    /// breakdown at reduced size when enabled.
     /// </summary>
-    public string Number(int total, int baseValue, int addition, string scalingIcon)
+    public string Number(string icon, int total, int baseValue, int addition)
     {
       if (!_showBreakdown)
       {
-        return Number(total);
+        return Number(icon, total);
       }
 
-      return $"<b>{total}</b> <size={_breakdownSizePercent}%>({baseValue} + {addition}{scalingIcon})</size>";
+      return $"{icon}<b>{total}</b> <size={_breakdownSizePercent}%>({baseValue} + {addition})</size>";
     }
   }
 }

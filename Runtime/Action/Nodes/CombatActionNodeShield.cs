@@ -102,8 +102,8 @@ namespace CupkekGames.Combat
     {
       AttributeModifier modifier = GetDamageValue(skillLevel);
       CombatDescriptionStyleSO style = rules.DescriptionStyle;
-      string number = CombatActionNodeDamage.ScaledNumber(style, modifier, caster, _damageType);
-      string shield = style.Colorize(CombatDescriptionRole.Shield, $"grants {style.Icon(CombatDescriptionRole.Shield)}{number} shield");
+      string number = CombatActionNodeDamage.ScaledNumber(style, style.Icon(CombatDescriptionRole.Shield), modifier, caster, _damageType);
+      string shield = style.Colorize(CombatDescriptionRole.Shield, $"grants {number} shield");
 
       string buff = CombatActionNodeBuff.DescribeEffect(GetAttributeDataEffect(skillLevel), rules.AttributeDisplayConfig);
       return string.IsNullOrEmpty(buff) ? shield : $"{shield} and {buff}";
