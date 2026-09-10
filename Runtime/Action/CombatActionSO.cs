@@ -74,13 +74,20 @@ namespace CupkekGames.Combat
       return Name + " T" + skillLevel;
     }
 
-    public string GetDescription(int skillLevel, CombatUnit caster = null)
+    /// <summary>
+    /// The authored description with every placeholder resolved: {nodeN} and
+    /// {nodeN_dur} ask the node at that index for its fragment, {skillLevel}
+    /// and {range} are literal. Fragments are coloured and iconed through
+    /// <see cref="ICombatRules.DescriptionStyle"/>; with a caster the numbers
+    /// include that unit's attribute scaling.
+    /// </summary>
+    public string GetDescription(int skillLevel, ICombatRules rules, CombatUnit caster = null)
     {
-      return ReplacePlaceholders(Description, Nodes, skillLevel, caster, TargetSelection);
+      return ReplacePlaceholders(Description, Nodes, skillLevel, caster, rules, TargetSelection);
     }
 
     public static string ReplacePlaceholders(string input, IReadOnlyList<GraphNodeSO> nodes, int skillLevel,
-      CombatUnit caster, CombatTargetSelection TargetSelection)
+      CombatUnit caster, ICombatRules rules, CombatTargetSelection TargetSelection)
     {
       string result = NodePlaceholderRegex.Replace(input, match =>
       {
@@ -89,7 +96,7 @@ namespace CupkekGames.Combat
           var node = nodes[index];
           if (node is ICombatActionNodeDescription describable)
           {
-            return describable.GetDescription(skillLevel, caster);
+            return describable.GetDescription(skillLevel, caster, rules);
           }
         }
 
@@ -103,7 +110,7 @@ namespace CupkekGames.Combat
           var node = nodes[index];
           if (node is ICombatActionNodeDescription describable)
           {
-            return describable.GetDescriptionDuration(skillLevel, caster);
+            return describable.GetDescriptionDuration(skillLevel, caster, rules);
           }
         }
 

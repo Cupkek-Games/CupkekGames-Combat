@@ -17,6 +17,9 @@ namespace CupkekGames.Combat
         // Attribute Display
         AttributeDisplayConfigSO AttributeDisplayConfig { get; }
 
+        // Skill description colours, inline icons, number format
+        CombatDescriptionStyleSO DescriptionStyle { get; }
+
         // Damage modifiers (empty by default — games add custom modifiers)
         IReadOnlyList<IDamageModifier> DamageModifiers { get; }
 

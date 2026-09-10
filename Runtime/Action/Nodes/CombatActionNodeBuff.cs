@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
@@ -10,7 +11,7 @@ using CupkekGames.RPGStats;
 
 namespace CupkekGames.Combat
 {
-  public class CombatActionNodeBuff : CombatActionNodeWithTarget
+  public class CombatActionNodeBuff : CombatActionNodeWithTarget, ICombatActionNodeDescription
   {
     // System.Guid is not Unity-serializable, so the previous Guid field
     // silently regenerated on every load. SerializedGuid persists, making
@@ -97,6 +98,47 @@ namespace CupkekGames.Combat
 
     protected override void OnReset()
     {
+    }
+
+    public string GetDescription(int skillLevel, CombatUnit caster, ICombatRules rules)
+    {
+      return DescribeEffect(GetAttributeDataEffect(skillLevel), rules.AttributeDisplayConfig);
+    }
+
+    public string GetDescriptionDuration(int skillLevel, CombatUnit caster, ICombatRules rules)
+    {
+      return CombatActionNodeStatusEffect.DescribeDuration(GetDuration(skillLevel), rules.DescriptionStyle);
+    }
+
+    /// <summary>
+    /// "ATK +20%, DEF +5" with each entry in the attribute display config's
+    /// positive or negative colour; empty when the effect changes nothing.
+    /// </summary>
+    public static string DescribeEffect(AttributeEffect effect, AttributeDisplayConfigSO displayConfig)
+    {
+      if (effect == null || effect.IsEmpty())
+      {
+        return string.Empty;
+      }
+
+      var parts = new List<string>();
+      foreach (AttributeEffectEntry entry in effect.Entries)
+      {
+        AttributeDefinitionSO attribute = AttributeDefinitionResolver.TryGet(entry.AttributeKey.Key);
+        if (attribute == null)
+        {
+          continue;
+        }
+
+        var single = new AttributeEffectSingle { Add = entry.Additive, Multiply = entry.Multiplier };
+        string text = single.ToString(attribute.DisplayName + " ", displayConfig);
+        if (!string.IsNullOrEmpty(text))
+        {
+          parts.Add(text);
+        }
+      }
+
+      return string.Join(", ", parts);
     }
   }
 }

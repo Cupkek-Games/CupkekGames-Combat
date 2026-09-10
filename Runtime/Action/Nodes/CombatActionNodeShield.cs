@@ -2,7 +2,6 @@ using System;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
-using CupkekGames.Luna;
 using CupkekGames.BehaviourTrees;
 using CupkekGames.Data;
 using CupkekGames.Graphs;
@@ -99,28 +98,20 @@ namespace CupkekGames.Combat
     {
     }
 
-    public string GetDescription(int skillLevel, CombatUnit caster)
+    public string GetDescription(int skillLevel, CombatUnit caster, ICombatRules rules)
     {
       AttributeModifier modifier = GetDamageValue(skillLevel);
-      int baseValue = (int)(modifier.Flat + 0.5f);
+      CombatDescriptionStyleSO style = rules.DescriptionStyle;
+      string number = CombatActionNodeDamage.ScaledNumber(style, modifier, caster, _damageType);
+      string shield = style.Colorize(CombatDescriptionRole.Shield, $"grants {style.Icon(CombatDescriptionRole.Shield)}{number} shield");
 
-      if (caster == null)
-      {
-        return $"{RichTextColor.AQUA}grants {baseValue} shield{RichTextColor.CLOSING_TAG}";
-      }
-
-      int addition =
-        (int)(CombatDamageCalculator.CalculateAttributeAddition(caster, modifier, _damageType.AttackAttribute) + 0.5f);
-      int total = baseValue + addition;
-
-      return
-        $"{RichTextColor.AQUA}grants {total}({baseValue}+{addition}{_damageType.IconRichText}) shield{RichTextColor.CLOSING_TAG}";
+      string buff = CombatActionNodeBuff.DescribeEffect(GetAttributeDataEffect(skillLevel), rules.AttributeDisplayConfig);
+      return string.IsNullOrEmpty(buff) ? shield : $"{shield} and {buff}";
     }
 
-    public string GetDescriptionDuration(int skillLevel, CombatUnit caster)
+    public string GetDescriptionDuration(int skillLevel, CombatUnit caster, ICombatRules rules)
     {
-      // Shield is instant; no duration text.
-      return string.Empty;
+      return CombatActionNodeStatusEffect.DescribeDuration(GetDuration(skillLevel), rules.DescriptionStyle);
     }
   }
 }

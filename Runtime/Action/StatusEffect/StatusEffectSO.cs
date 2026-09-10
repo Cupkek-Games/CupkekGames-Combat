@@ -46,9 +46,13 @@ namespace CupkekGames.Combat
       return Name + " T" + skillLevel;
     }
 
-    public string GetDescription(int skillLevel, CombatUnit caster = null)
+    /// <summary>
+    /// The authored description with {skillLevel} resolved. Status effects
+    /// have no node graph, so no {nodeN} placeholders apply.
+    /// </summary>
+    public string GetDescription(int skillLevel)
     {
-      return "StatusEffectSO GetDescription";
+      return Description.Replace("{skillLevel}", skillLevel.ToString());
     }
 
     public void Prewarm(GameObject parent)

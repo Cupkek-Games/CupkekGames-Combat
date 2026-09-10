@@ -2,7 +2,6 @@ using UnityEngine;
 using CupkekGames.BehaviourTrees;
 using CupkekGames.Graphs;
 using System.Threading;
-using CupkekGames.Luna;
 
 namespace CupkekGames.Combat
 {
@@ -50,27 +49,28 @@ namespace CupkekGames.Combat
     {
     }
 
-    public string GetDescription(int skillLevel, CombatUnit caster)
+    public string GetDescription(int skillLevel, CombatUnit caster, ICombatRules rules)
     {
+      CombatDescriptionStyleSO style = rules.DescriptionStyle;
       string name = _statusEffectSO.Name.ToLowerInvariant();
-
       if (_statusEffectSO.HasTier)
       {
-        int level = GetEffectLevel(skillLevel);
-        return $"{RichTextColor.PURPLE}{name} T{level}{RichTextColor.CLOSING_TAG}";
+        name += $" T{GetEffectLevel(skillLevel)}";
       }
-      else
-      {
-        return $"{RichTextColor.PURPLE}{name}{RichTextColor.CLOSING_TAG}";
-      }
+
+      return style.Colorize(CombatDescriptionRole.Status, style.Icon(CombatDescriptionRole.Status) + name);
     }
 
-    public string GetDescriptionDuration(int skillLevel, CombatUnit caster)
+    public string GetDescriptionDuration(int skillLevel, CombatUnit caster, ICombatRules rules)
     {
-      float duration = GetDuration(skillLevel);
-      string durationString = duration.ToString("0.##");
+      return DescribeDuration(GetDuration(skillLevel), rules.DescriptionStyle);
+    }
 
-      return $"{RichTextColor.PURPLE}{durationString} seconds{RichTextColor.CLOSING_TAG}";
+    /// <summary>"5 seconds" in the duration colour, with its icon when authored.</summary>
+    public static string DescribeDuration(float seconds, CombatDescriptionStyleSO style)
+    {
+      string text = $"{style.Icon(CombatDescriptionRole.Duration)}{seconds:0.##} seconds";
+      return style.Colorize(CombatDescriptionRole.Duration, text);
     }
   }
 }

@@ -2,7 +2,6 @@ using System;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
-using CupkekGames.Luna;
 using CupkekGames.BehaviourTrees;
 using CupkekGames.Graphs;
 using CupkekGames.RPGStats;
@@ -46,7 +45,7 @@ namespace CupkekGames.Combat
     {
     }
 
-    public string GetDescription(int skillLevel, CombatUnit caster)
+    public string GetDescription(int skillLevel, CombatUnit caster, ICombatRules rules)
     {
       AttributeModifier modifier = GetDamageValue(skillLevel);
       if (modifier == null)
@@ -55,21 +54,13 @@ namespace CupkekGames.Combat
         return "";
       }
 
-      int baseValue = (int)(modifier.Flat + 0.5f);
+      CombatDescriptionStyleSO style = rules.DescriptionStyle;
+      string number = CombatActionNodeDamage.ScaledNumber(style, modifier, caster, _damageType);
 
-      if (caster == null)
-      {
-        return $"{RichTextColor.LIME}restores {baseValue} health{RichTextColor.CLOSING_TAG}";
-      }
-
-      int addition = (int)(CombatDamageCalculator.CalculateAttributeAddition(caster, modifier, _damageType.AttackAttribute) + 0.5f);
-      int total = baseValue + addition;
-
-      return
-        $"{RichTextColor.LIME}restores {total}({baseValue}+{addition}{_damageType.IconRichText}) health{RichTextColor.CLOSING_TAG}";
+      return style.Colorize(CombatDescriptionRole.Heal, $"restores {style.Icon(CombatDescriptionRole.Heal)}{number} health");
     }
 
-    public string GetDescriptionDuration(int skillLevel, CombatUnit caster)
+    public string GetDescriptionDuration(int skillLevel, CombatUnit caster, ICombatRules rules)
     {
       // Heal is instant; no duration text.
       return string.Empty;
