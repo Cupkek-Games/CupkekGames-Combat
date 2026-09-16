@@ -29,7 +29,7 @@ namespace CupkekGames.Combat
 
       foreach (CombatUnit target in GetTargetList(ctx.Caster, ctx.TargetList))
       {
-        ctx.CombatManager.PopupManager.Show(PopupKinds.Heal, target.CombatUnitGameObject.HealthBarTransform.position, damage);
+        ctx.CombatManager.PopupManager.Show(PopupKinds.Heal, target.View.HealthBarTransform.position, damage);
         target.Health.Heal(damage, ctx.Caster);
       }
 

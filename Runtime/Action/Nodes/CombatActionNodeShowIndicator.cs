@@ -50,7 +50,7 @@ namespace CupkekGames.Combat
       {
         _passed = deltaTime;
 
-        GameObject casterGO = caster.CombatUnitGameObject.gameObject;
+        GameObject casterGO = caster.View.gameObject;
         Transform transform = casterGO.transform;
         transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
 

@@ -97,7 +97,7 @@ namespace CupkekGames.Combat
     {
       if (_combatUnit != null)
       {
-        Debug.LogError("CombatUnitGameObject already registered");
+        Debug.LogError("View already registered");
         return;
       }
 
@@ -172,7 +172,7 @@ namespace CupkekGames.Combat
         _combatUnit = null;
 
         combatUnit.OnDeathEvent -= OnDeath;
-        combatUnit.UnregisterCombatUnitGameObject();
+        combatUnit.UnregisterView();
       }
 
       if (_animationTimeController != null)

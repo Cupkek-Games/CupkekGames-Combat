@@ -196,7 +196,7 @@ namespace CupkekGames.Combat
 
       int skillLevel = _caster.Level;
 
-      _runner = _caster.CombatUnitGameObject.Runners[action];
+      _runner = _caster.View.Runners[action];
 
       _runner.Setup(_caster, _primaryTarget, skillLevel, _combatSettings, _combatManager);
 
@@ -381,16 +381,16 @@ namespace CupkekGames.Combat
 
     private (CombatUnit, float) FindClosestEnemy(ReadOnlyCollection<CombatUnit> targets)
     {
-      Vector3 referencePosition = _caster.CombatUnitGameObject.transform.position;
+      Vector3 referencePosition = _caster.View.transform.position;
 
       CombatUnit closest = null;
       float closestDistanceSqr = Mathf.Infinity;
 
       foreach (CombatUnit target in targets)
       {
-        if (target != null && target.CombatUnitGameObject != null && target.Health.Current > 0)
+        if (target != null && target.View != null && target.Health.Current > 0)
         {
-          Vector3 directionToTarget = target.CombatUnitGameObject.transform.position - referencePosition;
+          Vector3 directionToTarget = target.View.transform.position - referencePosition;
           float dSqrToTarget = directionToTarget.sqrMagnitude;
 
           if (dSqrToTarget < closestDistanceSqr)
@@ -420,7 +420,7 @@ namespace CupkekGames.Combat
 
       _primaryTarget = newTarget;
 
-      _navMeshAgentController.FollowTarget(_primaryTarget.CombatUnitGameObject.transform, true, _debug);
+      _navMeshAgentController.FollowTarget(_primaryTarget.View.transform, true, _debug);
       _navMeshAgentController.StartMonitoringAgent();
 
       if (_debug)

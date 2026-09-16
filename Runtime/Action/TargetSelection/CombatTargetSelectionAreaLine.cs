@@ -15,7 +15,7 @@ namespace CupkekGames.Combat
 
         public override List<CombatUnit> GetTargets(ICombatUnitManager combatUnitManager, CombatUnit caster, CombatUnit primaryTarget, bool debug)
         {
-            Transform center = caster.CombatUnitGameObject.transform;
+            Transform center = caster.View.transform;
             Vector3 direction = center.forward;
             Vector3 endPoint = center.position + direction * Length;
 

@@ -21,7 +21,7 @@ namespace CupkekGames.Combat
 
             manager.PopupManager.Show(
                 PopupKinds.StatusNegative,
-                target.CombatUnitGameObject.HealthBarTransform.position,
+                target.View.HealthBarTransform.position,
                 0,
                 new TextPopupContext { LeftText = _popupText });
         }
@@ -32,7 +32,7 @@ namespace CupkekGames.Combat
         public void OnEnd(ICombatSettings combatSettings, ICombatManager manager,
             CombatUnit caster, CombatUnit target, int skillLevel)
         {
-            if (target == null || target.CombatUnitGameObject == null) return;
+            if (target == null || target.View == null) return;
 
             if (_stun) target.StartAI();
             if (_silence) target.SetSilenced(false);

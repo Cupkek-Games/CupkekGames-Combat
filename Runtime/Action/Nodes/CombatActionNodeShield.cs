@@ -69,7 +69,7 @@ namespace CupkekGames.Combat
       {
         CancellationToken cancellationToken = ctx.CreateTargetLinkedToken(target.DeathToken.Token);
 
-        ctx.CombatManager.PopupManager.Show(PopupKinds.Shield, target.CombatUnitGameObject.HealthBarTransform.position, damage);
+        ctx.CombatManager.PopupManager.Show(PopupKinds.Shield, target.View.HealthBarTransform.position, damage);
 
         CombatUnitShieldNode shield = new CombatUnitShieldNode(damage, _id.Value(), attributeEffectRuntime);
 

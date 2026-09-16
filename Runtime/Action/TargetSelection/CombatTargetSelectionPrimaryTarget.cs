@@ -18,9 +18,9 @@ namespace CupkekGames.Combat
         return result;
       }
 
-      if (caster.CombatUnitGameObject == null)
+      if (caster.View == null)
       {
-        if (debug) Debug.Log("caster.CombatUnitGameObject null");
+        if (debug) Debug.Log("caster.View null");
         return result;
       }
 
@@ -30,13 +30,13 @@ namespace CupkekGames.Combat
         return result;
       }
 
-      if (primaryTarget.CombatUnitGameObject == null)
+      if (primaryTarget.View == null)
       {
-        if (debug) Debug.Log("primaryTarget.CombatUnitGameObject null");
+        if (debug) Debug.Log("primaryTarget.View null");
         return result;
       }
 
-      if (IsInRange(caster.CombatUnitGameObject.transform, primaryTarget.CombatUnitGameObject.transform, 0.1f, debug))
+      if (IsInRange(caster.View.transform, primaryTarget.View.transform, 0.1f, debug))
       {
         result.Add(primaryTarget);
       }

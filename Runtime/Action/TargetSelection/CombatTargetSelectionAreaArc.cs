@@ -14,7 +14,7 @@ namespace CupkekGames.Combat
     public float Angle;
     public override List<CombatUnit> GetTargets(ICombatUnitManager combatUnitManager, CombatUnit caster, CombatUnit primaryTarget, bool debug)
     {
-      Transform center = caster.CombatUnitGameObject.transform;
+      Transform center = caster.View.transform;
 
       List<Collider> colliders = TargetAreaColliderExtensions.FindCollidersInArc(center.position, center.rotation, Radius, Angle);
 

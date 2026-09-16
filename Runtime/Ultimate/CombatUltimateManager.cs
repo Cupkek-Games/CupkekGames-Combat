@@ -91,9 +91,9 @@ namespace CupkekGames.Combat
             _timeManager.Global.TimeScale = 0f;
             _combatUnitManager.SetTimeScale(0f, combatUnit);
 
-            if (combatUnit.CombatUnitGameObject != null)
+            if (combatUnit.View != null)
             {
-                _renderFeatureManager?.DarkenEverythingExceptAsync(combatUnit.CombatUnitGameObject.Renderers, true);
+                _renderFeatureManager?.DarkenEverythingExceptAsync(combatUnit.View.Renderers, true);
             }
         }
 

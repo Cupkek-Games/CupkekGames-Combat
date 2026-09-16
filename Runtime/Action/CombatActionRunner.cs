@@ -32,13 +32,13 @@ namespace CupkekGames.Combat
                 return;
             }
 
-            if (_caster.CombatUnitGameObject == null)
+            if (_caster.View == null)
             {
-                Debug.LogError("CombatActionRunner caster.CombatUnitGameObject is null");
+                Debug.LogError("CombatActionRunner caster.View is null");
                 return;
             }
 
-            _runner.Prewarm(_caster.CombatUnitGameObject.gameObject);
+            _runner.Prewarm(_caster.View.gameObject);
         }
 
         public void Setup(
@@ -140,7 +140,7 @@ namespace CupkekGames.Combat
 
         public void RunOnceUntilComplete(ICombatUnitManager combatUnitManager, CombatUnit primaryTarget, bool debug)
         {
-            _caster.CombatUnitGameObject.StartCoroutine(RunOnceUntilCompleteRoutine(combatUnitManager, primaryTarget,
+            _caster.View.StartCoroutine(RunOnceUntilCompleteRoutine(combatUnitManager, primaryTarget,
                 debug));
         }
 

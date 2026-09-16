@@ -35,7 +35,7 @@ namespace CupkekGames.Combat
 
       foreach (var entry in _threatTable)
       {
-        if (entry.Value > highestThreat && entry.Key.CombatUnitGameObject != null)
+        if (entry.Value > highestThreat && entry.Key.View != null)
         {
           highestThreat = entry.Value;
           highestThreatUnit = entry.Key;

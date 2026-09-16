@@ -68,8 +68,8 @@ namespace CupkekGames.Combat
             return TeamId >= 0 && TeamId == other.TeamId;
         }
 
-        private CombatUnitView _combatUnitGameObject = null;
-        public CombatUnitView CombatUnitGameObject => _combatUnitGameObject;
+        private CombatUnitView _view = null;
+        public CombatUnitView View => _view;
         private CancellationTokenSource _deathToken;
         public CancellationTokenSource DeathToken => _deathToken;
         private CancellationTokenSource _interruptToken;
@@ -166,57 +166,57 @@ namespace CupkekGames.Combat
             return CombatData?.GetCombatAction(actionType, manager, caster, primaryTarget);
         }
 
-        public void RegisterCombatUnitGameObject(CombatUnitView combatUnitGameObject)
+        public void RegisterView(CombatUnitView view)
         {
-            _combatUnitGameObject = combatUnitGameObject;
-            _combatUnitGameObject.RegisterCombatUnit(this);
+            _view = view;
+            _view.RegisterCombatUnit(this);
         }
 
         // ── AI / View delegation ─────────────────────────────────────────
 
-        public bool IsAIRunning => _combatUnitGameObject != null
-            && _combatUnitGameObject.CombatUnitAI != null
-            && _combatUnitGameObject.CombatUnitAI.IsRunning;
+        public bool IsAIRunning => _view != null
+            && _view.CombatUnitAI != null
+            && _view.CombatUnitAI.IsRunning;
 
         public void StopAI(bool dead, bool pauseAnimation)
         {
-            if (_combatUnitGameObject == null) return;
-            var ai = _combatUnitGameObject.CombatUnitAI;
+            if (_view == null) return;
+            var ai = _view.CombatUnitAI;
             if (ai != null && ai.IsSetup) ai.StopAI(dead);
-            if (pauseAnimation) _combatUnitGameObject.AnimationTimeController?.Pause();
+            if (pauseAnimation) _view.AnimationTimeController?.Pause();
         }
 
         public void StartAI()
         {
-            if (_combatUnitGameObject == null) return;
-            var ai = _combatUnitGameObject.CombatUnitAI;
+            if (_view == null) return;
+            var ai = _view.CombatUnitAI;
             if (ai != null && ai.IsSetup) ai.StartAI();
-            _combatUnitGameObject.AnimationTimeController?.Resume();
+            _view.AnimationTimeController?.Resume();
         }
 
-        public void SetSilenced(bool silence) => _combatUnitGameObject?.CombatUnitAI?.SetSilenced(silence);
-        public void SetRooted(bool root) => _combatUnitGameObject?.CombatUnitAI?.NavMeshAgentController.Root(root);
-        public void AddThreat(CombatUnit source, int threatAmount) => _combatUnitGameObject?.CombatUnitAI?.CombatUnitThreatTable.AddThreat(source, threatAmount);
+        public void SetSilenced(bool silence) => _view?.CombatUnitAI?.SetSilenced(silence);
+        public void SetRooted(bool root) => _view?.CombatUnitAI?.NavMeshAgentController.Root(root);
+        public void AddThreat(CombatUnit source, int threatAmount) => _view?.CombatUnitAI?.CombatUnitThreatTable.AddThreat(source, threatAmount);
 
-        public void UnregisterCombatUnitGameObject()
+        public void UnregisterView()
         {
-            if (_combatUnitGameObject != null)
+            if (_view != null)
             {
-                _combatUnitGameObject.UnRegisterCombatUnit();
-                _combatUnitGameObject = null;
+                _view.UnRegisterCombatUnit();
+                _view = null;
             }
         }
 
-        private async UniTaskVoid DisableCombatUnitGameObject(CombatUnitView combatUnitGameObject, float delay)
+        private async UniTaskVoid DisableView(CombatUnitView view, float delay)
         {
-            if (combatUnitGameObject != null)
+            if (view != null)
             {
-                try { await _timeManager.Global.DelayAsync(delay, combatUnitGameObject.destroyCancellationToken); }
+                try { await _timeManager.Global.DelayAsync(delay, view.destroyCancellationToken); }
                 catch (OperationCanceledException) { }
                 finally
                 {
-                    if (combatUnitGameObject != null && combatUnitGameObject.gameObject != null)
-                        combatUnitGameObject.gameObject.SetActive(false);
+                    if (view != null && view.gameObject != null)
+                        view.gameObject.SetActive(false);
                 }
             }
         }
@@ -232,7 +232,7 @@ namespace CupkekGames.Combat
 
         public void OnDeath()
         {
-            DisableCombatUnitGameObject(_combatUnitGameObject, 0.7f).Forget();
+            DisableView(_view, 0.7f).Forget();
             Dispose();
             OnDeathEvent?.Invoke(this);
         }
@@ -262,12 +262,12 @@ namespace CupkekGames.Combat
             _timeBundle.Clear();
         }
 
-        public void DestroyAllThenReleaseCombatUnitGameObject()
+        public void DestroyAllThenReleaseView()
         {
-            if (_combatUnitGameObject != null)
+            if (_view != null)
             {
                 CharacterData?.Model?.DestroyAllThenRelease();
-                _combatUnitGameObject = null;
+                _view = null;
             }
         }
 

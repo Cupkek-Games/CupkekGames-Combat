@@ -36,7 +36,7 @@ namespace CupkekGames.Combat
 
       foreach (CombatUnit target in GetTargetList(ctx.Caster, ctx.TargetList))
       {
-        GameObject go = target.CombatUnitGameObject.Center.gameObject;
+        GameObject go = target.View.Center.gameObject;
 
         // TimeBundle timeBundle = _useCasterTimeScale ? caster.TimeBundle : target.TimeBundle;
         // NOTE: VFXBundle is using caster.TimeBundle for now as it is default and most desired behavior

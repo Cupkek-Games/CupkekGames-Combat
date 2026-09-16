@@ -53,7 +53,7 @@ namespace CupkekGames.Combat
             // Wide outline is a shared service in the scene
             _wideOutlineManager = ServiceLocator.Get<WideOutlineManager>(true);
 
-            // These exist on CombatUnitGameObject prefabs; allow null for non-unit objects (slot markers)
+            // These exist on unit view prefabs; allow null for non-unit objects (slot markers)
             _shaderColorController = GetComponentInChildren<ShaderColorController>();
             _shaderEmissionController = GetComponentInChildren<ShaderEmissionController>();
 

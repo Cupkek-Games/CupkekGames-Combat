@@ -35,7 +35,7 @@ namespace CupkekGames.Combat
 
         private async UniTaskVoid RiseAndFallAsync(CombatUnit unit, CancellationToken ct)
         {
-            Transform transform = unit.CombatUnitGameObject.VisualsRoot.transform;
+            Transform transform = unit.View.VisualsRoot.transform;
             Vector3 startPosition = transform.position;
             Vector3 peakPosition = startPosition + Vector3.up * _riseHeight;
 

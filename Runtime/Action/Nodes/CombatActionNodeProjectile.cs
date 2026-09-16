@@ -44,7 +44,7 @@ namespace CupkekGames.Combat
 
       RenderFeatureManager renderFeatureManager = ServiceLocator.Get<RenderFeatureManager>();
 
-      if (target == null || target.DeathToken == null || target.CombatUnitGameObject == null)
+      if (target == null || target.DeathToken == null || target.View == null)
       {
         return BTNodeRuntimeState.Fail;
       }

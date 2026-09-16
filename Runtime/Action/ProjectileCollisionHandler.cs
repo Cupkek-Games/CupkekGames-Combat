@@ -81,7 +81,7 @@ namespace CupkekGames.Combat
             CombatUnitView targetUnitGameObject = other.GetComponentInParent<CombatUnitView>();
             if (targetUnitGameObject == null)
             {
-                return; // No CombatUnitGameObject found, ignore this collision.
+                return; // No unit view found, ignore this collision.
             }
 
             CombatUnit targetUnit = targetUnitGameObject.CombatUnit;

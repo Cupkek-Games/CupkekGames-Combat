@@ -20,7 +20,7 @@ namespace CupkekGames.Combat
       {
         CancellationToken cancellationToken = ctx.CreateTargetLinkedToken(target.DeathToken.Token, target.InterruptToken.Token);
 
-        IAnimationStateController animController = target.CombatUnitGameObject.AnimationController;
+        IAnimationStateController animController = target.View.AnimationController;
         animController?.PlayClipWithReturnToIdle(_animationClip, _fadeDuration, cancellationToken);
       }
 

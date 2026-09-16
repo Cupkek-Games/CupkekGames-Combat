@@ -25,8 +25,8 @@ namespace CupkekGames.Combat
         list.AddRange(targetList);
       }
 
-      // remove null and null CombatUnitGameObject
-      list.RemoveAll(unit => unit == null || unit.CombatUnitGameObject == null);
+      // remove null and units without a view
+      list.RemoveAll(unit => unit == null || unit.View == null);
 
       return list;
     }

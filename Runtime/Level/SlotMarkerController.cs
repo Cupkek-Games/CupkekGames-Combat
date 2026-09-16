@@ -114,7 +114,7 @@ namespace CupkekGames.Combat
 
     //   Quaternion rotation = combatUnit.IsAlly ? Quaternion.Euler(0f, -90f, 0f) : Quaternion.Euler(0f, 90f, 0f);
 
-    //   combatUnit.SpawnCombatUnitGameObject(transform.position, rotation);
+    //   combatUnit.SpawnView(transform.position, rotation);
     // }
 
     // public async UniTask SpawnCombatUnitAsync(CombatUnit combatUnit)
@@ -123,7 +123,7 @@ namespace CupkekGames.Combat
 
     //   Quaternion rotation = combatUnit.IsAlly ? Quaternion.Euler(0f, -90f, 0f) : Quaternion.Euler(0f, 90f, 0f);
 
-    //   await combatUnit.SpawnCombatUnitGameObjectAsync(transform.position, rotation);
+    //   await combatUnit.SpawnViewAsync(transform.position, rotation);
     // }
   }
 }

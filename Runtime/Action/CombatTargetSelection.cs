@@ -108,9 +108,9 @@ namespace CupkekGames.Combat
               return false;
             }
 
-            CombatUnitView combatUnitGameObject = collider.gameObject.GetComponent<CombatUnitView>();
+            CombatUnitView view = collider.gameObject.GetComponent<CombatUnitView>();
 
-            return combatUnitGameObject != null;
+            return view != null;
           }
         );
       // .OrderBy(collider => (collider.transform.position - center).sqrMagnitude);

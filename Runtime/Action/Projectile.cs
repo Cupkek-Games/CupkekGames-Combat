@@ -104,7 +104,7 @@ namespace CupkekGames.Combat
       _child = Child;
       _frame = frame;
 
-      Transform spawnTransform = caster.CombatUnitGameObject.Center.transform;
+      Transform spawnTransform = caster.View.Center.transform;
       spawnTransform.GetPositionAndRotation(out Vector3 startPosition, out Quaternion startRotation);
 
       Vector3 targetPosition;
@@ -114,9 +114,9 @@ namespace CupkekGames.Combat
 
         targetPosition = startPosition + worldSpaceDisplacement;
       }
-      else if (target != null && target.CombatUnitGameObject != null)
+      else if (target != null && target.View != null)
       {
-        targetPosition = target.CombatUnitGameObject.Center.position;
+        targetPosition = target.View.Center.position;
       }
       else
       {
@@ -131,7 +131,7 @@ namespace CupkekGames.Combat
       // Play flash VFX
       if (_flashPrefab != null)
       {
-        _flashPrefab?.Play(caster.CombatUnitGameObject.gameObject, spawnPos, spawnRot, globalCancelToken,
+        _flashPrefab?.Play(caster.View.gameObject, spawnPos, spawnRot, globalCancelToken,
           caster.TimeBundle, renderFeatureManager).Forget();
       }
 
@@ -196,9 +196,9 @@ namespace CupkekGames.Combat
       }
 
       // Play hit VFX
-      if (_hitPrefab != null && caster.CombatUnitGameObject != null && caster.CombatUnitGameObject.gameObject != null)
+      if (_hitPrefab != null && caster.View != null && caster.View.gameObject != null)
       {
-        _hitPrefab.Play(caster.CombatUnitGameObject.gameObject, projectile.transform, globalCancelToken,
+        _hitPrefab.Play(caster.View.gameObject, projectile.transform, globalCancelToken,
           caster.TimeBundle, renderFeatureManager).Forget();
       }
 
@@ -243,9 +243,9 @@ namespace CupkekGames.Combat
       float elapsedTime = 0f;
       while (elapsedTime < projectileDuration && projectile != null && projectile.activeSelf)
       {
-        if (target == null || target.CombatUnitGameObject == null) return false;
+        if (target == null || target.View == null) return false;
 
-        Vector3 targetPosition = target.CombatUnitGameObject.Center.position;
+        Vector3 targetPosition = target.View.Center.position;
         float t = elapsedTime / projectileDuration;
         projectile.transform.position = Vector3.Lerp(spawnPos, targetPosition, t);
 

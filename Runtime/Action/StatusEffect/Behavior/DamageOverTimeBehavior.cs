@@ -18,9 +18,9 @@ namespace CupkekGames.Combat
             CombatUnit caster, CombatUnit target, int skillLevel)
         {
             if (_sfxPlayer != null)
-                _sfxPlayer.Play(target.CombatUnitGameObject.Center.transform);
+                _sfxPlayer.Play(target.View.Center.transform);
 
-            Vector3 targetPos = target.CombatUnitGameObject.HealthBarTransform.position;
+            Vector3 targetPos = target.View.HealthBarTransform.position;
 
             float maxHP = target.GetAttributeValue(target.Attributes.HP);
             int damage = (int)((maxHP * _damagePercentagePerSkillLevel * skillLevel) + 0.5f);

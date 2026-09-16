@@ -25,14 +25,14 @@ namespace CupkekGames.Combat
 
             foreach (CombatUnit target in GetTargetList(ctx.Caster, ctx.TargetList))
             {
-                target.CombatUnitGameObject.transform.GetPositionAndRotation(out Vector3 startPosition,
+                target.View.transform.GetPositionAndRotation(out Vector3 startPosition,
                     out Quaternion objectWorldRotation);
 
                 Vector3 dashWorldSpaceDisplacement = objectWorldRotation * dash;
 
                 Vector3 endPosition = startPosition + dashWorldSpaceDisplacement;
 
-                target.CombatUnitGameObject.CombatUnitAI.NavMeshAgentController
+                target.View.CombatUnitAI.NavMeshAgentController
                     .MoveAgentManually(endPosition, _duration, _avoidancePriority, cancellationToken, _ease).Forget();
             }
 

@@ -109,13 +109,13 @@ namespace CupkekGames.Combat
             // damage state above still applies; there is nothing left to
             // visualize, and dereferencing the dead view was an every-battle
             // NRE surfacing as an unobserved UniTask exception (2026-08-16).
-            CombatUnitView combatUnitGameObject = target.CombatUnitGameObject;
-            if (combatUnitGameObject == null)
+            CombatUnitView view = target.View;
+            if (view == null)
             {
                 return;
             }
 
-            Vector3 targetPos = combatUnitGameObject.HealthBarTransform.position;
+            Vector3 targetPos = view.HealthBarTransform.position;
 
             manager.PopupManager.Show(
                 PopupKinds.DamageVariant(result.ElementMultiplier),
@@ -123,17 +123,17 @@ namespace CupkekGames.Combat
                 result.Damage,
                 new DamagePopupContext { IsCrit = result.IsCrit });
 
-            combatUnitGameObject.ShaderColorController
+            view.ShaderColorController
               .AddColor(visualSettings.HitColor, visualSettings.HitColorWeight, visualSettings.HitColorDurationMS).Forget();
-            combatUnitGameObject.ShaderEmissionController
+            view.ShaderEmissionController
               .AddColor(visualSettings.HitColorEmission, visualSettings.HitColorWeight, visualSettings.HitColorDurationMS).Forget();
 
-            combatUnitGameObject.TakeDamageSquashAndStretch(visualSettings.HitSquashAndStretchBumpAmount);
+            view.TakeDamageSquashAndStretch(visualSettings.HitSquashAndStretchBumpAmount);
 
             if (result.IsCrit)
             {
                 manager.EventDatabase.InvokeOnCriticalHitEvent(attacker, target, result.Damage);
-                manager.PlayCriticalEffect(combatUnitGameObject.transform);
+                manager.PlayCriticalEffect(view.transform);
             }
         }
     }
