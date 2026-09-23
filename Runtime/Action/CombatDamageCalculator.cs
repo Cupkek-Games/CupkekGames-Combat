@@ -102,6 +102,13 @@ namespace CupkekGames.Combat
           CombatUnit target,
           DamageResult result)
         {
+            // A landing projectile can reach a unit that fell while it flew:
+            // nothing is left to hurt or to show.
+            if (target.Health.Current <= 0)
+            {
+                return;
+            }
+
             target.Health.TakeDamage(result.Damage, attacker);
 
             // A delayed hit (projectile in flight) can land after the target's

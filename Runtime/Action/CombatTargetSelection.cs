@@ -36,6 +36,15 @@ namespace CupkekGames.Combat
       return IsInRange(caster, target, Range, tolerance, debug);
     }
 
+    /// <summary>
+    /// Targets for a payload that may know where its projectile landed
+    /// (<paramref name="impact"/>, null otherwise). Selections that do not care
+    /// about an impact point answer as <see cref="GetTargets(ICombatUnitManager, CombatUnit, CombatUnit, bool)"/>.
+    /// </summary>
+    public virtual List<CombatUnit> GetTargets(ICombatUnitManager combatUnitManager, CombatUnit caster,
+      CombatUnit primaryTarget, Vector3? impact, bool debug)
+      => GetTargets(combatUnitManager, caster, primaryTarget, debug);
+
     public virtual List<CombatUnit> GetTargets(ICombatUnitManager combatUnitManager, CombatUnit caster, CombatUnit primaryTarget, bool debug)
     {
       List<CombatUnit> result = new List<CombatUnit>(combatUnitManager.CombatUnitsAlly);

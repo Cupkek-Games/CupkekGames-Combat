@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading;
+using UnityEngine;
 using CupkekGames.Graphs;
 
 namespace CupkekGames.Combat
@@ -41,6 +42,15 @@ namespace CupkekGames.Combat
         public CombatUnit Caster => Get<CombatUnit>("Caster");
         public CombatUnit PrimaryTarget => Get<CombatUnit>("PrimaryTarget");
         public int SkillLevel => Get<int>("SkillLevel");
+
+        public const string ImpactPositionKey = "ImpactPosition";
+
+        /// <summary>
+        /// Where the projectile carrying this payload landed; null outside a
+        /// projectile's payload. An area selection can centre on it
+        /// (<see cref="CombatTargetSelectionAreaCircle.Center"/>).
+        /// </summary>
+        public Vector3? ImpactPosition => _frame.TryGet<Vector3>(ImpactPositionKey, out var v) ? v : (Vector3?)null;
 
         /// <summary>
         /// Reads walk the frame chain so a scoped decorator's local

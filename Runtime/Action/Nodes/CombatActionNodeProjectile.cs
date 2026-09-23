@@ -49,7 +49,7 @@ namespace CupkekGames.Combat
         return BTNodeRuntimeState.Fail;
       }
 
-      _projectile.PlayProjectile(ctx.Caster, target, frame, GetChild(), ctx.CombatCancelToken, target.DeathToken.Token, ctx.Caster.TimeBundle, renderFeatureManager).Forget();
+      _projectile.PlayProjectile(ctx.Caster, target, frame, GetChild(), ctx.CombatCancelToken, ctx.Caster.TimeBundle, renderFeatureManager).Forget();
 
       return BTNodeRuntimeState.Success;
     }

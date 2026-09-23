@@ -49,6 +49,7 @@ namespace CupkekGames.Combat
                     parentCtx.CombatManager.UnitManager,
                     parentCtx.Caster,
                     parentCtx.PrimaryTarget,
+                    parentCtx.ImpactPosition,
                     false));
 
                 _scopedContext.TargetList = copy;

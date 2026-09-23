@@ -40,8 +40,6 @@ namespace CupkekGames.Combat
     [SerializeField] private VFXBundle _flashPrefab;
 
     private GameObjectPool _projectilePool = null;
-    private BTNode _child;
-    private GraphFrame _frame;
 
     public void Prewarm(GameObject parent)
     {
@@ -77,17 +75,22 @@ namespace CupkekGames.Combat
       _hitPrefab?.Dispose();
       _flashPrefab?.Dispose();
       _projectilePool = null;
-      _child = null;
-      _frame = null;
     }
 
+    /// <summary>
+    /// Flies the projectile and runs <paramref name="child"/> (the payload) where it lands.
+    /// A homing projectile follows its target while it stands and, if the target falls
+    /// mid-flight, flies on to where it last was and lands there: the payload still runs,
+    /// with <see cref="CombatActionContext.ImpactPosition"/> set, so an area payload hits
+    /// around the landing point and a dead target simply takes nothing. A collision
+    /// projectile runs the payload on each unit it touches.
+    /// </summary>
     public async UniTask PlayProjectile(
       CombatUnit caster,
       CombatUnit target,
       GraphFrame frame,
-      BTNode Child,
+      BTNode child,
       CancellationToken globalCancelToken,
-      CancellationToken targetCancelToken,
       TimeBundle timeBundle,
       RenderFeatureManager renderFeatureManager)
     {
@@ -96,13 +99,11 @@ namespace CupkekGames.Combat
         throw new Exception("_projectilePool is not initialized");
       }
 
-      if (!_withCollision && (target.DeathToken == null || target.DeathToken.IsCancellationRequested))
+      // Nothing to aim a homing shot at: the target fell before it left the hand.
+      if (!_withCollision && !target.IsAlive)
       {
         return;
       }
-
-      _child = Child;
-      _frame = frame;
 
       Transform spawnTransform = caster.View.Center.transform;
       spawnTransform.GetPositionAndRotation(out Vector3 startPosition, out Quaternion startRotation);
@@ -144,7 +145,8 @@ namespace CupkekGames.Combat
       if (_withCollision)
       {
         ProjectileCollisionHandler collisionHandler = projectile.GetComponent<ProjectileCollisionHandler>();
-        collisionHandler.Setup(caster, OnProjectileCollision, _destroyOnCollision, _collisionRadius);
+        collisionHandler.Setup(caster, (_, hit) => OnProjectileCollision(frame, child, projectile, hit),
+          _destroyOnCollision, _collisionRadius);
       }
 
       renderFeatureManager.UnDarkenAsync(projectile, true).Forget();
@@ -155,7 +157,7 @@ namespace CupkekGames.Combat
       float durationMul = Mathf.Clamp(distanceSqr / DISTANCE_REFERENCE_MAX, 0.1f, 1f);
 
       bool isCanceled;
-      bool success;
+      Vector3 landing = targetPosition;
       if (_withCollision)
       {
         float projectileDuration = _tweenDuration * durationMul;
@@ -167,7 +169,6 @@ namespace CupkekGames.Combat
         isCanceled =
           await TweenProjectile(projectile, targetPosition, projectileDuration, _tweenEase, globalCancelToken,
             timeBundle).SuppressCancellationThrow();
-        success = true;
       }
       else
       {
@@ -177,12 +178,10 @@ namespace CupkekGames.Combat
           projectileDuration = 0.1f;
         }
 
-        CancellationToken ct = CancellationTokenSource.CreateLinkedTokenSource(globalCancelToken, targetCancelToken)
-          .Token;
-
-        (isCanceled, success) =
-          await ProjectileFollowCombatUnit(target, projectile, projectileDuration, spawnPos, ct, timeBundle)
-            .SuppressCancellationThrow();
+        // Only the fight ending stops a homing shot: its target falling does not.
+        (isCanceled, landing) =
+          await ProjectileFollowCombatUnit(target, projectile, projectileDuration, spawnPos, targetPosition,
+            globalCancelToken, timeBundle).SuppressCancellationThrow();
       }
 
       if (projectile != null && projectile.activeSelf)
@@ -190,7 +189,7 @@ namespace CupkekGames.Combat
         projectile.SetActive(false);
       }
 
-      if (isCanceled || !success)
+      if (isCanceled)
       {
         return;
       }
@@ -204,7 +203,8 @@ namespace CupkekGames.Combat
 
       if (!_withCollision)
       {
-        _child.UpdateNode(_frame, 0);
+        frame.SetLocal(CombatActionContext.ImpactPositionKey, landing);
+        child.UpdateNode(frame, 0);
       }
     }
 
@@ -230,22 +230,26 @@ namespace CupkekGames.Combat
 
 
     /// <summary>
-    /// Projectile follow CombatUnit target
+    /// Homing flight: follows the target while it stands; once it falls (or its view
+    /// is gone) the shot flies on to the last place it saw it. Returns where it landed.
     /// </summary>
-    private async UniTask<bool> ProjectileFollowCombatUnit(
+    private async UniTask<Vector3> ProjectileFollowCombatUnit(
       CombatUnit target,
       GameObject projectile,
       float projectileDuration,
       Vector3 spawnPos,
+      Vector3 targetPosition,
       CancellationToken ct,
       TimeBundle timeBundle)
     {
       float elapsedTime = 0f;
       while (elapsedTime < projectileDuration && projectile != null && projectile.activeSelf)
       {
-        if (target == null || target.View == null) return false;
+        if (target.IsAlive && target.View != null)
+        {
+          targetPosition = target.View.Center.position;
+        }
 
-        Vector3 targetPosition = target.View.Center.position;
         float t = elapsedTime / projectileDuration;
         projectile.transform.position = Vector3.Lerp(spawnPos, targetPosition, t);
 
@@ -253,18 +257,19 @@ namespace CupkekGames.Combat
         await UniTask.Yield(cancellationToken: ct);
       }
 
-      return true;
+      return targetPosition;
     }
 
-    private void OnProjectileCollision(CombatUnit caster, CombatUnit targetUnit)
+    private void OnProjectileCollision(GraphFrame frame, BTNode child, GameObject projectile, CombatUnit targetUnit)
     {
       List<CombatUnit> targetList = new List<CombatUnit>()
       {
         targetUnit
       };
-      _frame.SetGlobal("TargetList", targetList);
+      frame.SetGlobal("TargetList", targetList);
+      frame.SetLocal(CombatActionContext.ImpactPositionKey, projectile.transform.position);
 
-      _child.UpdateNode(_frame, 0);
+      child.UpdateNode(frame, 0);
     }
   }
 }
