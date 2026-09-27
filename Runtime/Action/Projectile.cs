@@ -105,6 +105,10 @@ namespace CupkekGames.Combat
         return;
       }
 
+      // The payload runs where the shot lands, maybe after the runner began its
+      // next run: it keeps what the launch knew, its source above all.
+      CombatActionContext launch = CombatActionContext.Capture(frame);
+
       Transform spawnTransform = caster.View.Center.transform;
       spawnTransform.GetPositionAndRotation(out Vector3 startPosition, out Quaternion startRotation);
 
@@ -145,7 +149,7 @@ namespace CupkekGames.Combat
       if (_withCollision)
       {
         ProjectileCollisionHandler collisionHandler = projectile.GetComponent<ProjectileCollisionHandler>();
-        collisionHandler.Setup(caster, (_, hit) => OnProjectileCollision(frame, child, projectile, hit),
+        collisionHandler.Setup(caster, (_, hit) => OnProjectileCollision(launch, child, projectile, hit),
           _destroyOnCollision, _collisionRadius);
       }
 
@@ -203,8 +207,8 @@ namespace CupkekGames.Combat
 
       if (!_withCollision)
       {
-        frame.SetLocal(CombatActionContext.ImpactPositionKey, landing);
-        child.UpdateNode(frame, 0);
+        launch.Frame.SetLocal(CombatActionContext.ImpactPositionKey, landing);
+        child.UpdateNode(launch.Frame, 0);
       }
     }
 
@@ -260,16 +264,14 @@ namespace CupkekGames.Combat
       return targetPosition;
     }
 
-    private void OnProjectileCollision(GraphFrame frame, BTNode child, GameObject projectile, CombatUnit targetUnit)
+    // Each unit the shot touches is its payload's one target, on a branch of its own.
+    private void OnProjectileCollision(CombatActionContext launch, BTNode child, GameObject projectile, CombatUnit targetUnit)
     {
-      List<CombatUnit> targetList = new List<CombatUnit>()
-      {
-        targetUnit
-      };
-      frame.SetGlobal("TargetList", targetList);
-      frame.SetLocal(CombatActionContext.ImpactPositionKey, projectile.transform.position);
+      CombatActionContext hit = launch.Branch();
+      hit.TargetList = new List<CombatUnit> { targetUnit };
+      hit.Frame.SetLocal(CombatActionContext.ImpactPositionKey, projectile.transform.position);
 
-      child.UpdateNode(frame, 0);
+      child.UpdateNode(hit.Frame, 0);
     }
   }
 }

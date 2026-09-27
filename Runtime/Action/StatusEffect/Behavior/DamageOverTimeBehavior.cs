@@ -5,32 +5,33 @@ using CupkekGames.TextPopup;
 
 namespace CupkekGames.Combat
 {
+    /// <summary>
+    /// A share of the wearer's max health per effect level, every tick. The hit
+    /// names the effect's applier and source, so a death by it has a killer.
+    /// </summary>
     [Serializable]
     public class DamageOverTimeBehavior : IStatusEffectBehaviorFeature
     {
         [SerializeField] private float _damagePercentagePerSkillLevel = 0.05f;
         [SerializeField] private SFXPlayerSO _sfxPlayer;
 
-        public void OnStart(ICombatSettings combatSettings, ICombatManager manager,
-            CombatUnit caster, CombatUnit target, int skillLevel) { }
+        public void OnStart(ICombatSettings combatSettings, ICombatManager manager, StatusEffect effect, CombatUnit wearer) { }
 
-        public void OnTick(ICombatSettings combatSettings, ICombatManager manager,
-            CombatUnit caster, CombatUnit target, int skillLevel)
+        public void OnTick(ICombatSettings combatSettings, ICombatManager manager, StatusEffect effect, CombatUnit wearer)
         {
             if (_sfxPlayer != null)
-                _sfxPlayer.Play(target.View.Center.transform);
+                _sfxPlayer.Play(wearer.View.Center.transform);
 
-            Vector3 targetPos = target.View.HealthBarTransform.position;
+            Vector3 targetPos = wearer.View.HealthBarTransform.position;
 
-            float maxHP = target.GetAttributeValue(target.Attributes.HP);
-            int damage = (int)((maxHP * _damagePercentagePerSkillLevel * skillLevel) + 0.5f);
+            float maxHP = wearer.GetAttributeValue(wearer.Attributes.HP);
+            int damage = (int)((maxHP * _damagePercentagePerSkillLevel * effect.Level) + 0.5f);
 
-            target.Health.TakeDamage(damage, null);
+            wearer.Health.TakeDamage(new CombatHit(effect.Applier, effect.Source, damage));
 
             manager.PopupManager.Show(PopupKinds.Damage, targetPos, damage);
         }
 
-        public void OnEnd(ICombatSettings combatSettings, ICombatManager manager,
-            CombatUnit caster, CombatUnit target, int skillLevel) { }
+        public void OnEnd(ICombatSettings combatSettings, ICombatManager manager, StatusEffect effect, CombatUnit wearer) { }
     }
 }

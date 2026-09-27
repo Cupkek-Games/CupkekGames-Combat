@@ -15,6 +15,13 @@ namespace CupkekGames.Combat
         private RenderFeatureManager _renderFeatureManager;
         private Queue<CombatUnit> _combatUnits = new();
         private bool _effectsActive = false;
+
+        /// <summary>
+        /// An ultimate's freeze is on: global time stands still for everyone but
+        /// its caster, from the moment it is selected (its queue turn) to its end.
+        /// </summary>
+        public bool EffectsActive => _effectsActive;
+
         public bool HasNext => _combatUnits.Count > 0;
 
         public CombatUltimateManager(ICombatSettings combatSettings, TimeManager timeManager,

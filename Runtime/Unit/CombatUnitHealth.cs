@@ -24,6 +24,8 @@ namespace CupkekGames.Combat
         // Events
         public event Action<int> OnChange;
         public event Action<CombatUnit, int, CombatUnit> OnTakeDamage;
+        /// <summary>A hit landed (its Dealt and Killed set): raised before the death it causes.</summary>
+        public event Action<CombatUnit, CombatHit> OnHit;
         public event Action<int, CombatUnit> OnHeal;
 
         public CombatUnitHealth(CombatUnit owner)
@@ -36,13 +38,20 @@ namespace CupkekGames.Combat
             _current = (int)(_owner.GetAttributeValue(_owner.Attributes.HP) + 0.5f);
         }
 
-        public void TakeDamage(int damage, CombatUnit damager)
+        /// <summary>
+        /// The one way damage reaches a unit: shields first, then health. The
+        /// landed hit becomes <see cref="CombatUnit.LastHit"/> and is raised
+        /// (<see cref="OnHit"/>) before the death it may cause, so a death's
+        /// handlers find the killer in the last hit.
+        /// </summary>
+        public void TakeDamage(in CombatHit hit)
         {
             if (_current <= 0)
             {
                 return;
             }
 
+            int damage = hit.Damage;
             int remainingDamage = damage;
             int actualDamage = 0;
 
@@ -61,7 +70,11 @@ namespace CupkekGames.Combat
             }
 
             _owner.Mana.OnTakeDamageManaTrack(actualDamage);
-            OnTakeDamage?.Invoke(_owner, actualDamage, damager);
+
+            CombatHit landed = hit.Landed(actualDamage, _current == 0);
+            _owner.LastHit = landed;
+            OnTakeDamage?.Invoke(_owner, actualDamage, hit.Attacker);
+            OnHit?.Invoke(_owner, landed);
 
             if (_current == 0)
             {

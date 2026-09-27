@@ -8,6 +8,7 @@ using CupkekGames.Graphs;
 using CupkekGames.RPGStats;
 using CupkekGames.Data.Primitives;
 using CupkekGames.TextPopup;
+using CupkekGames.Units;
 
 namespace CupkekGames.Combat
 {
@@ -51,8 +52,9 @@ namespace CupkekGames.Combat
       int damage =
         (int)(CombatDamageCalculator.CalculateScaledValue(ctx.Caster, modifier, _damageType.AttackAttribute) + 0.5f);
 
-      // buff
-      AttributeEffect attributeEffect = GetAttributeDataEffect(ctx.SkillLevel);
+      // buff, and the caster's own touch on the shields she casts
+      AttributeEffect attributeEffect;
+      (damage, attributeEffect) = ApplyCastModifiers(ctx.Caster, damage, GetAttributeDataEffect(ctx.SkillLevel));
       CombatAttributeDataEffectRuntime attributeEffectRuntime =
         CombatActionNodeBuff.GetCombatAttributeDataEffectRuntime(
           ctx.ActionSO.Icon,
@@ -77,6 +79,26 @@ namespace CupkekGames.Combat
       }
 
       return BTNodeRuntimeState.Success;
+    }
+
+    /// <summary>
+    /// A shield as its caster casts it: <paramref name="amount"/> and the
+    /// <paramref name="effect"/> it carries, after her <see cref="IShieldCastModifier"/>s
+    /// in feature order. The effect lives on the shield, so its target has it
+    /// for exactly as long as the shield lasts.
+    /// </summary>
+    public static (int amount, AttributeEffect effect) ApplyCastModifiers(CombatUnit caster, int amount, AttributeEffect effect)
+    {
+      foreach (IUnitFeature feature in caster.Features)
+      {
+        if (feature is not IShieldCastModifier cast) continue;
+
+        amount = cast.ModifyShieldAmount(caster, amount);
+        AttributeEffect carried = cast.GetShieldEffect(caster);
+        if (carried != null) effect = effect == null ? carried : effect.Combine(carried);
+      }
+
+      return (amount, effect);
     }
 
     private AttributeModifier GetDamageValue(int skillLevel)

@@ -13,6 +13,8 @@ namespace CupkekGames.Combat
   {
     [SerializeField] private AttributeModifier[] _damage;
     [SerializeField] private DamageTypeDefinitionSO _damageType;
+    [Tooltip("What the heal scales off: the caster's attack attribute, or a share of each target's max health.")]
+    [SerializeField] private CombatValueScaling _scaling = CombatValueScaling.CasterAttribute;
 
     protected override BTNodeRuntimeState OnUpdate(GraphFrame frame, float deltaTime)
     {
@@ -25,10 +27,9 @@ namespace CupkekGames.Combat
 
       AttributeModifier modifier = GetDamageValue(ctx.SkillLevel);
 
-      int damage = (int)(CombatDamageCalculator.CalculateScaledValue(ctx.Caster, modifier, _damageType.AttackAttribute) + 0.5f);
-
       foreach (CombatUnit target in GetTargetList(ctx.Caster, ctx.TargetList))
       {
+        int damage = (int)(CombatDamageCalculator.CalculateScaledValue(ctx.Caster, target, modifier, _scaling, _damageType.AttackAttribute) + 0.5f);
         ctx.CombatManager.PopupManager.Show(PopupKinds.Heal, target.View.HealthBarTransform.position, damage);
         target.Health.Heal(damage, ctx.Caster);
       }
@@ -55,7 +56,9 @@ namespace CupkekGames.Combat
       }
 
       CombatDescriptionStyleSO style = rules.DescriptionStyle;
-      string number = CombatActionNodeDamage.ScaledNumber(style, style.Icon(CombatDescriptionRole.Heal), modifier, caster, _damageType);
+      string number = _scaling == CombatValueScaling.TargetMaxHealth
+        ? CombatActionNodeDamage.ShareNumber(style, style.Icon(CombatDescriptionRole.Heal), modifier)
+        : CombatActionNodeDamage.ScaledNumber(style, style.Icon(CombatDescriptionRole.Heal), modifier, caster, _damageType);
 
       return style.Colorize(CombatDescriptionRole.Heal, $"restores {number} health");
     }

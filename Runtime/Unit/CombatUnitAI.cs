@@ -30,6 +30,10 @@ namespace CupkekGames.Combat
     private float _threatTableCheckCooldown = 0;
     private CombatActionRunner _runner;
     private int _actionType;
+    // The action selected for the current run (reported with the ultimate's phases).
+    private CombatActionSO _action;
+    // The selected ultimate has begun to cast (a silence no longer drops it).
+    private bool _ultimateStarted;
 
     private float _cooldown = 0;
 
@@ -80,7 +84,7 @@ namespace CupkekGames.Combat
       }
 
       _caster.OnDeathEvent += OnDeath;
-      _caster.Health.OnTakeDamage += OnTakeDamage;
+      _caster.Health.OnHit += OnHit;
       _caster.TimeBundle.TimeContext.OnUpdate += OnUpdate;
       _running = true;
 
@@ -102,10 +106,15 @@ namespace CupkekGames.Combat
         _navMeshAgentController.StopAll();
 
         _caster.OnDeathEvent -= OnDeath;
-        _caster.Health.OnTakeDamage -= OnTakeDamage;
+        _caster.Health.OnHit -= OnHit;
         _caster.TimeBundle.TimeContext.OnUpdate -= OnUpdate;
 
+        // A stopped unit keeps no run: a selected ultimate is dropped (and
+        // reported), any other run starts over when the unit moves again.
+        CancelSelectedUltimate();
         _combatManager.CombatUltimateManager.RemoveFromQueue(_caster);
+        _runner = null;
+        _action = null;
 
         if (dead)
         {
@@ -194,11 +203,13 @@ namespace CupkekGames.Combat
 
       OnActionSelect(action);
 
-      int skillLevel = _caster.Level;
+      int skillLevel = _caster.EffectiveSkillRank;
 
+      _action = action;
       _runner = _caster.View.Runners[action];
 
-      _runner.Setup(_caster, _primaryTarget, skillLevel, _combatSettings, _combatManager);
+      // A fresh source per run: every hit of this run names it.
+      _runner.Setup(_caster, _primaryTarget, skillLevel, _combatSettings, _combatManager, CombatSource.ForAction(action, _caster));
 
       if (_debug)
       {
@@ -207,7 +218,9 @@ namespace CupkekGames.Combat
 
       if (_actionType == CombatActionType.Ultimate)
       {
+        _ultimateStarted = false;
         _combatManager.CombatUltimateManager.Enqueue(_caster);
+        _combatManager.EventDatabase.InvokeOnUltimate(_caster, action, UltimatePhase.Selected);
       }
 
       return true;
@@ -254,6 +267,8 @@ namespace CupkekGames.Combat
     /// </summary>
     private void ExecuteCurrentAction(float deltaTime)
     {
+      if (_actionType == CombatActionType.Ultimate) _ultimateStarted = true;
+
       BTNodeRuntimeState state = _runner.UpdateTree(_combatManager.UnitManager, _primaryTarget, deltaTime, _debug);
 
       if (state == BTNodeRuntimeState.Fail)
@@ -262,6 +277,7 @@ namespace CupkekGames.Combat
         if (_actionType == CombatActionType.Ultimate)
         {
           _combatManager.CombatUltimateManager.Dequeue();
+          _combatManager.EventDatabase.InvokeOnUltimate(_caster, _action, UltimatePhase.Cancelled);
 
           if (_debug)
           {
@@ -270,6 +286,8 @@ namespace CupkekGames.Combat
         }
 
         _runner = null;
+        _action = null;
+        _ultimateStarted = false;
         _actionType = CombatActionType.Skip;
 
         ThreatTableCheck(deltaTime, false);
@@ -279,6 +297,7 @@ namespace CupkekGames.Combat
         if (_actionType == CombatActionType.Ultimate)
         {
           _combatManager.CombatUltimateManager.Dequeue();
+          _combatManager.EventDatabase.InvokeOnUltimate(_caster, _action, UltimatePhase.Completed);
 
           if (_debug)
           {
@@ -287,6 +306,8 @@ namespace CupkekGames.Combat
         }
 
         _runner = null;
+        _action = null;
+        _ultimateStarted = false;
 
         if (_caster != null)
         {
@@ -409,9 +430,9 @@ namespace CupkekGames.Combat
       _navMeshAgentController.StopAll();
     }
 
-    private void OnTakeDamage(CombatUnit defender, int damage, CombatUnit damager)
+    private void OnHit(CombatUnit defender, CombatHit hit)
     {
-      _combatUnitThreatTable.AddThreat(damager, damage);
+      _combatUnitThreatTable.AddThreat(hit);
     }
 
     private void UpdatePrimaryTarget()
@@ -430,24 +451,38 @@ namespace CupkekGames.Combat
     }
 
     // Mechanics
+
+    /// <summary>
+    /// A silenced unit selects only its normal action. A silence also drops an
+    /// ultimate selected but not yet started; one already casting runs on.
+    /// </summary>
     public void SetSilenced(bool silence)
     {
-      if (silence)
-      {
-        if (_silenced)
-        {
-          // already silenced
-          return;
-        }
+      _silenced = silence;
 
-        _silenced = true;
+      if (silence && !_ultimateStarted) CancelSelectedUltimate();
+    }
 
-        // No scenario where a unit is in the queue when _actionType is not Ultimate
-      }
-      else
-      {
-        _silenced = false;
-      }
+    /// <summary>
+    /// Drops the ultimate this unit has selected: off the queue (the freeze
+    /// ends with it), the run cleared, the turn skipped, and reported as
+    /// cancelled. Its mana stays full, so it selects again when it can (a
+    /// silenced unit attacks instead). Nothing selected: nothing happens.
+    /// </summary>
+    public void CancelSelectedUltimate()
+    {
+      if (_runner == null || _actionType != CombatActionType.Ultimate || _caster == null) return;
+
+      CombatUnit caster = _caster;
+      CombatActionSO action = _action;
+
+      _runner = null;
+      _action = null;
+      _ultimateStarted = false;
+      _actionType = CombatActionType.Skip;
+
+      _combatManager.CombatUltimateManager.RemoveFromQueue(caster);
+      _combatManager.EventDatabase.InvokeOnUltimate(caster, action, UltimatePhase.Cancelled);
     }
   }
 }

@@ -16,6 +16,9 @@ namespace CupkekGames.Combat
         /// <summary>Fraction of damage that gets through the target's defense (final damage = attack * this).</summary>
         public float DamageTakenMultiplier;
         public DamageTypeDefinitionSO DamageType;
+        /// <summary>The action the hit comes from (the source's action); null for a hit from no action.</summary>
         public CombatActionSO ActionSO;
+        /// <summary>Where the hit comes from.</summary>
+        public CombatSource Source;
     }
 }

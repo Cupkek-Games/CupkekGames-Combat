@@ -41,8 +41,26 @@ namespace CupkekGames.Combat
         /// <summary>Character/model definition data via GetDefinition.</summary>
         public CharacterDefinition CharacterData => _data?.GetDefinition<CharacterDefinition>();
 
-        public AttributeSet EquipmentBonus;
         public int Level = 1;
+
+        private int _skillRank;
+
+        /// <summary>
+        /// The rank this unit's skills are used at; 0 follows <see cref="Level"/>
+        /// (enemies). A game can tie it to something other than the level (a
+        /// hero's path).
+        /// </summary>
+        public int SkillRank
+        {
+            get => _skillRank;
+            set => _skillRank = value >= 0 ? value : throw new ArgumentOutOfRangeException(nameof(value), value, "A skill rank is 0 (follow the level) or more.");
+        }
+
+        /// <summary>The rank the AI runs its actions at: <see cref="SkillRank"/>, or the level when it is 0.</summary>
+        public int EffectiveSkillRank => _skillRank > 0 ? _skillRank : Level;
+
+        /// <summary>The last hit that landed on this unit (<see cref="CombatUnitHealth.TakeDamage(in CombatHit)"/>); after a death, its killer.</summary>
+        public CombatHit? LastHit { get; internal set; }
 
         // ── Sub-systems ──
         public CombatUnitHealth Health { get; private set; }
@@ -111,8 +129,6 @@ namespace CupkekGames.Combat
                 _data = _dataReference.GetUnitDefinition(_unitSOProvider);
             }
 
-            EquipmentBonus = new AttributeSet();
-
             Level = _dataReference.Level > 0 ? _dataReference.Level : 1;
 
             ResetHealthAndMana();
@@ -158,6 +174,20 @@ namespace CupkekGames.Combat
                     total = modifier.ModifyAttribute(this, attribute, total);
 
             return total;
+        }
+
+        /// <summary>
+        /// The element this unit's attacks carry: its own, unless a feature
+        /// (<see cref="IAttackElementModifier"/>) infuses another. The element
+        /// it is hit in stays its own.
+        /// </summary>
+        public ElementTypeDefinitionSO GetAttackElement()
+        {
+            ElementTypeDefinitionSO element = CombatData?.Element;
+            foreach (var feature in _unit.Features)
+                if (feature is IAttackElementModifier modifier)
+                    element = modifier.ModifyAttackElement(this, element);
+            return element;
         }
 
         public CombatActionSO GetCombatAction(int actionType, ICombatManager manager, CombatUnit caster,

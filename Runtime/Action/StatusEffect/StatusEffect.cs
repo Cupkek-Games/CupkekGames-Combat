@@ -48,6 +48,17 @@ namespace CupkekGames.Combat
       }
     }
 
+    /// <summary>
+    /// The unit that put it on; null when nobody did. Its damage over time
+    /// names this unit as the attacker. Runtime only.
+    /// </summary>
+    [NonSerialized] private CombatUnit _applier;
+    public CombatUnit Applier => _applier;
+
+    /// <summary>Where this effect's hits come from: one source for its whole life. Runtime only.</summary>
+    [NonSerialized] private CombatSource _source;
+    public CombatSource Source => _source ??= CombatSource.ForStatus(Definition, _applier);
+
     public event Action<StatusEffect> OnEnd;
     private CancellationToken _skillCancelToken;
     private CountdownTimeContext _countdown;
@@ -67,7 +78,8 @@ namespace CupkekGames.Combat
 
     public StatusEffect() { }
 
-    public StatusEffect(StatusEffectSO definition, float duration, int level, CancellationToken skillCancelToken)
+    public StatusEffect(StatusEffectSO definition, float duration, int level, CancellationToken skillCancelToken,
+      CombatUnit applier = null)
     {
       _definition = definition;
       DefinitionKey = new CatalogKey
@@ -79,45 +91,48 @@ namespace CupkekGames.Combat
       _countdown = new CountdownTimeContext(TimeManager.Instance.Global, StartDuration, 0, INTERVAL_VISUAL, skillCancelToken);
       Level = level;
       _skillCancelToken = skillCancelToken;
+      _applier = applier;
+      _source = CombatSource.ForStatus(definition, applier);
     }
 
+    /// <summary>Starts working on <paramref name="wearer"/>: its start, its ticks, its end.</summary>
     public void StartExecuteLoop(ICombatSettings combatSettings,
-      ICombatManager combatManager, CombatUnit caster)
+      ICombatManager combatManager, CombatUnit wearer)
     {
       _countdown.Dispose();
 
-      Definition.OnStart(combatSettings, combatManager, caster, caster, Level);
+      Definition.OnStart(combatSettings, combatManager, this, wearer);
 
       _timeSinceLastExecute = 0;
 
-      _countdown = new CountdownTimeContext(caster.TimeBundle.TimeContext, StartDuration, 0, INTERVAL_VISUAL, _skillCancelToken, false);
+      _countdown = new CountdownTimeContext(wearer.TimeBundle.TimeContext, StartDuration, 0, INTERVAL_VISUAL, _skillCancelToken, false);
       _countdown.OnTick += (interval) =>
       {
-        OnTick(interval, combatSettings, combatManager, caster);
+        OnTick(interval, combatSettings, combatManager, wearer);
       };
       _countdown.OnComplete += () =>
       {
-        OnComplete(combatSettings, combatManager, caster);
+        OnComplete(combatSettings, combatManager, wearer);
       };
       _countdown.Start();
     }
 
     private void OnTick(float interval, ICombatSettings combatSettings,
-      ICombatManager combatManager, CombatUnit caster)
+      ICombatManager combatManager, CombatUnit wearer)
     {
       _timeSinceLastExecute += interval;
 
       if (_timeSinceLastExecute >= INTERVAL_EXECUTE)
       {
         _timeSinceLastExecute = 0;
-        Definition.OnTick(combatSettings, combatManager, caster, caster, Level);
+        Definition.OnTick(combatSettings, combatManager, this, wearer);
       }
     }
 
     private void OnComplete(ICombatSettings combatSettings,
-      ICombatManager combatManager, CombatUnit caster)
+      ICombatManager combatManager, CombatUnit wearer)
     {
-      Definition.OnEnd(combatSettings, combatManager, caster, caster, Level);
+      Definition.OnEnd(combatSettings, combatManager, this, wearer);
       OnEnd?.Invoke(this);
 
       Dispose();
@@ -146,7 +161,7 @@ namespace CupkekGames.Combat
 
     public IData CloneData()
     {
-      StatusEffect clone = new StatusEffect(Definition, StartDuration, Level, CancellationToken.None);
+      StatusEffect clone = new StatusEffect(Definition, StartDuration, Level, CancellationToken.None, _applier);
       if (_countdown != null && clone._countdown != null)
       {
         clone._countdown.Value = _countdown.Value;

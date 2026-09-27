@@ -27,10 +27,11 @@ namespace CupkekGames.Combat
     [SerializeReference]
     public CombatTargetSelection TargetSelection = new CombatTargetSelectionPrimaryTarget();
 
+    /// <summary>Deals <paramref name="attack"/> to <paramref name="target"/> through crit, element and defense; the hit names <paramref name="source"/>.</summary>
     public static void AttackTarget(ICombatSettings combatSettings, ICombatManager manager, CombatUnit attacker, float attack,
-      CombatUnit target, DamageTypeDefinitionSO damageType)
+      CombatUnit target, DamageTypeDefinitionSO damageType, CombatSource source)
     {
-      DamageResult result = CombatDamageCalculator.CalculateAttackDamage(combatSettings, attacker, target, attack, damageType);
+      DamageResult result = CombatDamageCalculator.CalculateAttackDamage(combatSettings, attacker, target, attack, damageType, source);
       CombatDamageCalculator.ApplyDamageAndVisuals(combatSettings, manager, attacker, target, result);
     }
 

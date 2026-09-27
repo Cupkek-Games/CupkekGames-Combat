@@ -29,7 +29,7 @@ namespace CupkekGames.Combat
           Debug.LogError("StatusEffect duration is 0, setting to float.MaxValue");
         }
 
-        target.StatusEffects.Add(ctx.CombatManager, new StatusEffect(_statusEffectSO, duration, level, cancellationToken));
+        target.StatusEffects.Add(ctx.CombatManager, new StatusEffect(_statusEffectSO, duration, level, cancellationToken, ctx.Caster));
       }
 
       return BTNodeRuntimeState.Success;

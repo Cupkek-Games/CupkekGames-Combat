@@ -20,25 +20,22 @@ namespace CupkekGames.Combat
 
     [SerializeReference] private List<IStatusEffectBehaviorFeature> _behaviors = new List<IStatusEffectBehaviorFeature>();
 
-    public void OnStart(ICombatSettings combatSettings, ICombatManager manager,
-      CombatUnit caster, CombatUnit primaryTarget, int skillLevel)
+    public void OnStart(ICombatSettings combatSettings, ICombatManager manager, StatusEffect effect, CombatUnit wearer)
     {
       foreach (IStatusEffectBehaviorFeature b in _behaviors)
-        b?.OnStart(combatSettings, manager, caster, primaryTarget, skillLevel);
+        b?.OnStart(combatSettings, manager, effect, wearer);
     }
 
-    public void OnTick(ICombatSettings combatSettings, ICombatManager manager,
-      CombatUnit caster, CombatUnit primaryTarget, int skillLevel)
+    public void OnTick(ICombatSettings combatSettings, ICombatManager manager, StatusEffect effect, CombatUnit wearer)
     {
       foreach (IStatusEffectBehaviorFeature b in _behaviors)
-        b?.OnTick(combatSettings, manager, caster, primaryTarget, skillLevel);
+        b?.OnTick(combatSettings, manager, effect, wearer);
     }
 
-    public void OnEnd(ICombatSettings combatSettings, ICombatManager manager,
-      CombatUnit caster, CombatUnit primaryTarget, int skillLevel)
+    public void OnEnd(ICombatSettings combatSettings, ICombatManager manager, StatusEffect effect, CombatUnit wearer)
     {
       foreach (IStatusEffectBehaviorFeature b in _behaviors)
-        b?.OnEnd(combatSettings, manager, caster, primaryTarget, skillLevel);
+        b?.OnEnd(combatSettings, manager, effect, wearer);
     }
 
     public string GetName(int skillLevel)

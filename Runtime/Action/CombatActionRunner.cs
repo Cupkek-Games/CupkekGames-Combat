@@ -41,13 +41,21 @@ namespace CupkekGames.Combat
             _runner.Prewarm(_caster.View.gameObject);
         }
 
+        /// <summary>
+        /// Readies one run of the action. <paramref name="source"/> names every
+        /// hit of this run: pass a fresh one per run (<see cref="CombatSource.ForAction"/>,
+        /// or an Item or Proc source), so "once per action" is "once per source".
+        /// </summary>
         public void Setup(
             CombatUnit caster,
             CombatUnit primaryTarget,
             int skillLevel,
             ICombatSettings combatSettings,
-            ICombatManager combatManager)
+            ICombatManager combatManager,
+            CombatSource source)
         {
+            if (source == null) throw new ArgumentNullException(nameof(source), "A run needs its source.");
+
             _caster = caster;
 
             _runner.ResetTree();
@@ -59,6 +67,7 @@ namespace CupkekGames.Combat
             bb["Caster"] = _caster;
             bb["PrimaryTarget"] = primaryTarget;
             bb["SkillLevel"] = skillLevel;
+            bb[CombatActionContext.SourceKey] = source;
 
             if (combatManager?.CancelToken != null)
             {

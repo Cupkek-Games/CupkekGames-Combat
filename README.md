@@ -17,6 +17,9 @@ Turn-based combat framework. Composes `Unit` + `IUnitFeatureDefinition` (from `c
 - Damage pipeline: `CombatDamageCalculator`, `IDamageModifier` (consumer-extensible).
 - `ICombatRules` / `ICombatSettings` — extension contracts for game-specific damage formulas + attack-speed config.
 - `IPowerLevelCalculator` — pluggable power-level estimation.
+- Fight events: every hit goes through `CombatUnitHealth.TakeDamage(in CombatHit)`, which records `CombatUnit.LastHit` (a death's killer) and raises `OnHit` before the death; `CombatSource` names where a hit came from (a fresh instance per action run, kept by a projectile from its launch); `EventDatabaseCombat.OnHit` and `OnUltimate` (Selected, Completed, Cancelled).
+- Unit seams: `CombatUnit.SkillRank` (0 follows the level), `IAttackElementModifier` (the element a unit attacks in), `IShieldCastModifier` (the shields a unit casts), `CombatUnitMana.Drain`, `CombatUnitAI.CancelSelectedUltimate` (a stun or a silence drops a selected ultimate), threat only from actions.
+- `CombatValueScaling` on damage and heal nodes (the caster's attribute, or a share of each target's max health) and exact damage (no crit, no defense).
 
 **Editor** (`CupkekGames.Combat.Editor.asmdef`)
 

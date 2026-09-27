@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 using CupkekGames.Graphs;
+using Unity.Scripting.LifecycleManagement;
 
 namespace CupkekGames.Combat
 {
@@ -43,6 +44,11 @@ namespace CupkekGames.Combat
         public CombatUnit PrimaryTarget => Get<CombatUnit>("PrimaryTarget");
         public int SkillLevel => Get<int>("SkillLevel");
 
+        public const string SourceKey = "Source";
+
+        /// <summary>Where this run's hits come from: fresh per run, carried by a projectile from its launch.</summary>
+        public CombatSource Source => Get<CombatSource>(SourceKey);
+
         public const string ImpactPositionKey = "ImpactPosition";
 
         /// <summary>
@@ -63,6 +69,43 @@ namespace CupkekGames.Combat
         {
             get => Get<List<CombatUnit>>("TargetList");
             set => _frame.SetLocal("TargetList", value);
+        }
+
+        // ─── Capture ─────────────────────────────────────────────────────
+
+        [NoAutoStaticsCleanup]
+        static readonly string[] CapturedKeys =
+        {
+            "CombatActionSO", "CombatSettings", "CombatManager", "Caster", "PrimaryTarget", "SkillLevel",
+            SourceKey, "TargetList", "CancellationToken", "CancellationTokenCasterDeath", "CancellationTokenCasterInterrupt",
+        };
+
+        /// <summary>
+        /// What a later branch keeps from the run visible at <paramref name="frame"/>
+        /// (a projectile's payload, which lands after the runner may have started
+        /// its next run and rewritten the globals): a child frame holding the
+        /// run's values as locals, and a context bound to it.
+        /// </summary>
+        public static CombatActionContext Capture(GraphFrame frame)
+        {
+            GraphFrame captured = frame.Push();
+            foreach (string key in CapturedKeys)
+            {
+                if (frame.ContainsKey(key)) captured.SetLocal(key, frame.Get(key));
+            }
+
+            CombatActionContext context = new CombatActionContext(captured);
+            captured.SetLocal("Context", context);
+            return context;
+        }
+
+        /// <summary>A branch of its own under this context: its locals (a target list) reach only its descendants.</summary>
+        public CombatActionContext Branch()
+        {
+            GraphFrame branch = _frame.Push();
+            CombatActionContext context = new CombatActionContext(branch);
+            branch.SetLocal("Context", context);
+            return context;
         }
 
         // ─── Cancellation tokens ────────────────────────────────────────

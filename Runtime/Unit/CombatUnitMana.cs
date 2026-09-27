@@ -78,6 +78,20 @@ namespace CupkekGames.Combat
             }
         }
 
+        /// <summary>
+        /// Takes up to <paramref name="amount"/> mana and returns what it took.
+        /// A bar drained below full no longer selects the ultimate.
+        /// </summary>
+        public int Drain(int amount)
+        {
+            int taken = Mathf.Clamp(amount, 0, _current);
+            if (taken == 0) return 0;
+
+            _current -= taken;
+            OnChange?.Invoke(_current);
+            return taken;
+        }
+
         public int GetNextActionType()
         {
             if (_current >= _combatSettings.MaxMP)

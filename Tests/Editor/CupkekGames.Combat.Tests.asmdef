@@ -1,0 +1,32 @@
+{
+    "name": "CupkekGames.Combat.Tests",
+    "rootNamespace": "CupkekGames.Combat.Tests",
+    "references": [
+        "GUID:1c8a1107e14a7f440b63d2aaf0d317d2",
+        "GUID:66a9028f1bcb8134ea44ffd3f24a2b1e",
+        "GUID:c81485117be9f8d47b2f1ff6cbcb3610",
+        "GUID:627a6a50a96ba294eb51be4e4019a893",
+        "GUID:d2c1d6a34b0e46ec9be9c069d80a0c19",
+        "GUID:4c33768f512cd6845b7f12462e3175df",
+        "GUID:a57eb40d9a9e0984a816dda1fdae8adf",
+        "GUID:7c406b71f2eb1e846afd6e7e8f986558",
+        "GUID:86cfcabd1963458087b4d0562691da24",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -27,6 +27,21 @@ namespace CupkekGames.Combat
       }
     }
 
+    /// <summary>
+    /// A landed hit's threat: its damage, on its attacker, when an action dealt
+    /// it. Damage over time, procs and items draw no attention, so a thrown
+    /// potion's stand-in is never chased.
+    /// </summary>
+    public void AddThreat(in CombatHit hit)
+    {
+      if (hit.Source.Kind != CombatSourceKind.Action) return;
+
+      AddThreat(hit.Attacker, hit.Dealt);
+    }
+
+    /// <summary>The threat <paramref name="unit"/> holds on this table; 0 when none.</summary>
+    public int GetThreat(CombatUnit unit) => unit != null && _threatTable.TryGetValue(unit, out int threat) ? threat : 0;
+
     // Method to get the unit with the highest threat level
     public CombatUnit GetHighestThreatTarget()
     {

@@ -23,6 +23,19 @@ namespace CupkekGames.Combat
         }
 
         /// <summary>
+        /// A damage or heal amount for one target: <c>Flat + base × Multiplier</c>,
+        /// the base being the caster's <paramref name="attackAttribute"/> or, for
+        /// <see cref="CombatValueScaling.TargetMaxHealth"/>, the target's max health.
+        /// </summary>
+        public static float CalculateScaledValue(CombatUnit caster, CombatUnit target, AttributeModifier modifier,
+            CombatValueScaling scaling, AttributeDefinitionSO attackAttribute)
+        {
+            return scaling == CombatValueScaling.TargetMaxHealth
+                ? modifier.Flat + target.GetAttributeValue(target.Attributes.HP) * modifier.Multiplier
+                : CalculateScaledValue(caster, modifier, attackAttribute);
+        }
+
+        /// <summary>
         /// The portion of <see cref="CalculateScaledValue"/> that comes from the caster's attribute.
         /// Useful for description text that shows "base + addition".
         /// </summary>
@@ -32,8 +45,9 @@ namespace CupkekGames.Combat
         }
 
         /// <summary>
-        /// Pure-math portion of dealing damage: applies crit, element, defense, and
-        /// user-provided <see cref="IDamageModifier"/> hooks in order.
+        /// Pure-math portion of dealing damage: applies crit, element (the
+        /// attacker's attack element, <see cref="CombatUnit.GetAttackElement"/>),
+        /// defense, and user-provided <see cref="IDamageModifier"/> hooks in order.
         /// Returns the final integer damage and whether a crit occurred.
         /// Does NOT apply damage to the target or trigger any visual effects.
         /// </summary>
@@ -42,13 +56,15 @@ namespace CupkekGames.Combat
           CombatUnit attacker,
           CombatUnit target,
           float rawAttack,
-          DamageTypeDefinitionSO damageType)
+          DamageTypeDefinitionSO damageType,
+          CombatSource source)
         {
+            if (source == null) throw new System.ArgumentNullException(nameof(source), "A hit needs its source.");
+
             bool isCrit = attacker.PowerLevel.TryCritical();
             float attack = isCrit ? attacker.PowerLevel.ApplyCritical(rawAttack) : rawAttack;
 
-            float elementMultiplier = combatRules.ElementRelationshipTable.GetMultiplier(
-                attacker.CombatData?.Element, target.CombatData?.Element);
+            float elementMultiplier = ElementMultiplier(combatRules, attacker, target);
             attack *= elementMultiplier;
 
             float defense = target.GetAttributeValue(damageType.DefenseAttribute);
@@ -60,6 +76,8 @@ namespace CupkekGames.Combat
                 ElementMultiplier = elementMultiplier,
                 DamageTakenMultiplier = damageTaken,
                 DamageType = damageType,
+                ActionSO = source.Action,
+                Source = source,
             };
 
             // Apply raw damage modifiers (before defense)
@@ -88,8 +106,36 @@ namespace CupkekGames.Combat
                 Damage = damage,
                 IsCrit = isCrit,
                 ElementMultiplier = elementMultiplier,
+                Source = source,
             };
         }
+
+        /// <summary>
+        /// An exact amount: no crit, no defense and no damage modifiers; only the
+        /// attacker's element counts (a share of max health, the elemental
+        /// potion: chosen for the target's weakness and meant to be read off).
+        /// </summary>
+        public static DamageResult CalculateExactDamage(
+          ICombatRules combatRules,
+          CombatUnit attacker,
+          CombatUnit target,
+          float amount,
+          CombatSource source)
+        {
+            if (source == null) throw new System.ArgumentNullException(nameof(source), "A hit needs its source.");
+
+            float elementMultiplier = ElementMultiplier(combatRules, attacker, target);
+            return new DamageResult
+            {
+                Damage = (int)(amount * elementMultiplier + 0.5f),
+                IsCrit = false,
+                ElementMultiplier = elementMultiplier,
+                Source = source,
+            };
+        }
+
+        private static float ElementMultiplier(ICombatRules combatRules, CombatUnit attacker, CombatUnit target)
+            => combatRules.ElementRelationshipTable.GetMultiplier(attacker?.GetAttackElement(), target.CombatData?.Element);
 
         /// <summary>
         /// Applies damage to the target and plays all associated visual and audio effects.
@@ -109,7 +155,7 @@ namespace CupkekGames.Combat
                 return;
             }
 
-            target.Health.TakeDamage(result.Damage, attacker);
+            target.Health.TakeDamage(new CombatHit(attacker, result.Source, result.Damage, result.IsCrit, result.ElementMultiplier));
 
             // A delayed hit (projectile in flight) can land after the target's
             // view is gone — died and was despawned/cleaned up meanwhile. The
@@ -153,5 +199,7 @@ namespace CupkekGames.Combat
         public int Damage;
         public bool IsCrit;
         public float ElementMultiplier;
+        /// <summary>Where the damage comes from: the hit names it.</summary>
+        public CombatSource Source;
     }
 }
