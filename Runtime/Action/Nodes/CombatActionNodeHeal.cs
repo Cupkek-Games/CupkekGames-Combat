@@ -60,7 +60,9 @@ namespace CupkekGames.Combat
         ? CombatActionNodeDamage.ShareNumber(style, style.Icon(CombatDescriptionRole.Heal), modifier)
         : CombatActionNodeDamage.ScaledNumber(style, style.Icon(CombatDescriptionRole.Heal), modifier, caster, _damageType);
 
-      return style.Colorize(CombatDescriptionRole.Heal, $"restores {number} health");
+      // A share already names what it restores ("20% of max health").
+      string text = _scaling == CombatValueScaling.TargetMaxHealth ? $"restores {number}" : $"restores {number} health";
+      return style.Colorize(CombatDescriptionRole.Heal, text);
     }
 
     public string GetDescriptionDuration(int skillLevel, CombatUnit caster, ICombatRules rules)
