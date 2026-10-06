@@ -16,20 +16,12 @@ namespace CupkekGames.Combat
         public override List<CombatUnit> GetTargets(ICombatUnitManager combatUnitManager, CombatUnit caster, CombatUnit primaryTarget, bool debug)
         {
             Transform center = caster.View.transform;
-            Vector3 direction = center.forward;
-            Vector3 endPoint = center.position + direction * Length;
-
-            // Find colliders in a box along the line
-            List<Collider> colliders = TargetAreaColliderExtensions.FindCollidersInLine(
-                center.position,
-                endPoint,
-                Width);
-
-            return FromColliders(caster, colliders);
+            return FromArea(combatUnitManager, caster, CombatArea.Line(center.position, center.forward, Length, Width));
         }
 
 
         public override Indicator ShowIndicator(
+          ICombatSpace space,
           IIndicatorPool indicatorPool,
           Vector3 position,
           Quaternion rotation,
@@ -39,7 +31,7 @@ namespace CupkekGames.Combat
           Color? color = null)
         {
             Indicator indicator = indicatorPool.ShowLineRegion(
-                position, rotation, Length, Width, color);
+                position, rotation, space.ToWorld(Length), space.ToWorld(Width), color);
 
             if (duration > 0)
             {

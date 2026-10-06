@@ -36,7 +36,11 @@ namespace CupkekGames.Combat
         return result;
       }
 
-      if (IsInRange(caster.View.transform, primaryTarget.View.transform, 0.1f, debug))
+      ICombatSpace space = combatUnitManager.Space
+        ?? throw new InvalidOperationException("[CombatTargetSelectionPrimaryTarget] the fight has no space (ICombatUnitManager.Space is null).");
+      bool inRange = space.InRange(caster, primaryTarget, Range);
+      if (debug) Debug.Log($"InRange: {inRange} (range {Range})");
+      if (inRange)
       {
         result.Add(primaryTarget);
       }

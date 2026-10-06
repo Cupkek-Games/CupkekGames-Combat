@@ -225,7 +225,7 @@ namespace CupkekGames.Combat
         }
 
         public void SetSilenced(bool silence) => _view?.CombatUnitAI?.SetSilenced(silence);
-        public void SetRooted(bool root) => _view?.CombatUnitAI?.NavMeshAgentController.Root(root);
+        public void SetRooted(bool root) => _view?.CombatUnitAI?.Mover?.SetRooted(root);
         public void AddThreat(CombatUnit source, int threatAmount) => _view?.CombatUnitAI?.CombatUnitThreatTable.AddThreat(source, threatAmount);
 
         public void UnregisterView()

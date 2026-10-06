@@ -38,13 +38,12 @@ namespace CupkekGames.Combat
         center = caster.View.transform.position;
       }
 
-      List<Collider> colliders = TargetAreaColliderExtensions.FindCollidersInSphere(center, Radius);
-
-      return FromColliders(caster, colliders);
+      return FromArea(combatUnitManager, caster, CombatArea.Circle(center, Radius));
     }
 
 
     public override Indicator ShowIndicator(
+      ICombatSpace space,
       IIndicatorPool indicatorPool,
       Vector3 position,
       Quaternion rotation,
@@ -53,7 +52,7 @@ namespace CupkekGames.Combat
       TimeBundle timeBundle,
       Color? color = null)
     {
-      Indicator indicator = indicatorPool.ShowCircleRegion(position, Radius, color);
+      Indicator indicator = indicatorPool.ShowCircleRegion(position, space.ToWorld(Radius), color);
 
       if (duration > 0)
       {

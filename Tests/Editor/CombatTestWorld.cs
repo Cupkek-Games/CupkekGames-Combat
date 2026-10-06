@@ -191,5 +191,16 @@ namespace CupkekGames.Combat.Tests
         public ReadOnlyCollection<CombatUnit> CombatUnitsEnemy => Enemies.AsReadOnly();
         public void SetTimeScale(float timeScale, CombatUnit except) => TimeScales.Add(timeScale);
         public void SpawnEnemy(CombatUnitReference enemy, Vector2Int? position = null) { }
+        public ICombatSpace Space { get; } = new FakeSpace();
+    }
+
+    /// <summary>A space that measures between the views in metres (one combat unit is one metre) and covers nothing.</summary>
+    internal sealed class FakeSpace : ICombatSpace
+    {
+        public float Distance(CombatUnit a, CombatUnit b) => Vector3.Distance(a.View.transform.position, b.View.transform.position);
+        public bool InRange(CombatUnit caster, CombatUnit target, float range) => Distance(caster, target) <= range;
+        public void Collect(in CombatArea area, List<CombatUnit> results) => results.Clear();
+        public float ToWorld(float units) => units;
+        public ICombatMover CreateMover(CombatUnitView view) => throw new System.NotSupportedException("The test world moves nothing.");
     }
 }

@@ -55,6 +55,7 @@ namespace CupkekGames.Combat
         transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
 
         _indicator = ctx.ActionSO.ShowIndicator(
+          ctx.CombatManager.UnitManager.Space,
           ctx.CombatManager.IndicatorPool,
           position,
           rotation,

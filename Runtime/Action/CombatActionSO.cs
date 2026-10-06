@@ -42,6 +42,7 @@ namespace CupkekGames.Combat
     }
 
     public Indicator ShowIndicator(
+      ICombatSpace space,
       IIndicatorPool indicatorPool,
       Vector3 position,
       Quaternion rotation,
@@ -50,7 +51,7 @@ namespace CupkekGames.Combat
       TimeBundle timeBundle,
       Color? color = null)
     {
-      return TargetSelection.ShowIndicator(indicatorPool, position, rotation, duration, ct, timeBundle, color);
+      return TargetSelection.ShowIndicator(space, indicatorPool, position, rotation, duration, ct, timeBundle, color);
     }
 
     /// <summary>

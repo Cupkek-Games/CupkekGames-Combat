@@ -1,7 +1,6 @@
 using UnityEngine;
 using CupkekGames.BehaviourTrees;
 using CupkekGames.Graphs;
-using Cysharp.Threading.Tasks;
 using System.Threading;
 using PrimeTween;
 
@@ -21,19 +20,13 @@ namespace CupkekGames.Combat
 
             CancellationToken cancellationToken = ctx.LinkedCancelToken;
 
+            // The dash is in combat units, turned the way each target faces; its space moves it.
             Vector3 dash = GetDashVector(ctx.SkillLevel);
 
             foreach (CombatUnit target in GetTargetList(ctx.Caster, ctx.TargetList))
             {
-                target.View.transform.GetPositionAndRotation(out Vector3 startPosition,
-                    out Quaternion objectWorldRotation);
-
-                Vector3 dashWorldSpaceDisplacement = objectWorldRotation * dash;
-
-                Vector3 endPosition = startPosition + dashWorldSpaceDisplacement;
-
-                target.View.CombatUnitAI.NavMeshAgentController
-                    .MoveAgentManually(endPosition, _duration, _avoidancePriority, cancellationToken, _ease).Forget();
+                Vector3 offset = target.View.transform.rotation * dash;
+                target.View.CombatUnitAI.Mover.Dash(offset, _duration, _ease, _avoidancePriority, cancellationToken);
             }
 
             return BTNodeRuntimeState.Success;

@@ -1,11 +1,10 @@
+using System;
 using UnityEngine;
 using System.Collections.ObjectModel;
 using CupkekGames.BehaviourTrees;
-using CupkekGames.Navigation;
 
 namespace CupkekGames.Combat
 {
-  [RequireComponent(typeof(NavMeshAgentController))]
   [RequireComponent(typeof(CapsuleCollider))]
   public class CombatUnitAI : MonoBehaviour
   {
@@ -15,10 +14,12 @@ namespace CupkekGames.Combat
 
     public bool IsSetup => _combatSettings != null && _combatManager != null;
 
-    // Navigation
-    private NavMeshAgentController _navMeshAgentController;
+    // Movement, through the fight's space (made in SetupAI).
+    private ICombatSpace _space;
+    private ICombatMover _mover;
 
-    public NavMeshAgentController NavMeshAgentController => _navMeshAgentController;
+    /// <summary>How this unit moves; null until <see cref="SetupAI"/>.</summary>
+    public ICombatMover Mover => _mover;
 
     // State
     private bool _running = false;
@@ -43,14 +44,13 @@ namespace CupkekGames.Combat
     // Debug
     [SerializeField] bool _debug = false;
 
-    private void Awake()
-    {
-      _navMeshAgentController = GetComponent<NavMeshAgentController>();
-    }
-
     public void SetupAI(ICombatSettings combatSettings, ICombatManager combatManager,
       CombatUnit caster)
     {
+      _space = combatManager.UnitManager.Space
+        ?? throw new InvalidOperationException($"[CombatUnitAI] '{gameObject.name}': the fight has no space (ICombatUnitManager.Space is null); give the fight a CombatSpace.");
+      _mover = _space.CreateMover(caster.View);
+
       _combatSettings = combatSettings;
 
       CapsuleCollider collider = GetComponent<CapsuleCollider>();
@@ -88,8 +88,7 @@ namespace CupkekGames.Combat
       _caster.TimeBundle.TimeContext.OnUpdate += OnUpdate;
       _running = true;
 
-      _navMeshAgentController.RegisterTimeContext(_caster.TimeBundle);
-      _navMeshAgentController.StartMonitoringAgent();
+      _mover.Start(_caster.TimeBundle);
     }
 
     public void StopAI(bool dead)
@@ -102,8 +101,7 @@ namespace CupkekGames.Combat
       _running = false;
       if (_caster != null)
       {
-        _navMeshAgentController.UnRegisterTimeContext();
-        _navMeshAgentController.StopAll();
+        _mover.Stop();
 
         _caster.OnDeathEvent -= OnDeath;
         _caster.Health.OnHit -= OnHit;
@@ -320,8 +318,7 @@ namespace CupkekGames.Combat
       else
       {
         // Currently casting skill
-        _navMeshAgentController.StopMonitoringAgent();
-        _navMeshAgentController.StopFollow();
+        _mover.Hold();
       }
 
       if (_debug)
@@ -351,7 +348,7 @@ namespace CupkekGames.Combat
 
     private void OnActionSelect(CombatActionSO action)
     {
-      _navMeshAgentController.SetStoppingDistance(action.TargetSelection.Range);
+      _mover.SetReach(action.TargetSelection.Range);
     }
 
     private void FindAndFollowTarget()
@@ -402,8 +399,6 @@ namespace CupkekGames.Combat
 
     private (CombatUnit, float) FindClosestEnemy(ReadOnlyCollection<CombatUnit> targets)
     {
-      Vector3 referencePosition = _caster.View.transform.position;
-
       CombatUnit closest = null;
       float closestDistanceSqr = Mathf.Infinity;
 
@@ -411,8 +406,8 @@ namespace CupkekGames.Combat
       {
         if (target != null && target.View != null && target.Health.Current > 0)
         {
-          Vector3 directionToTarget = target.View.transform.position - referencePosition;
-          float dSqrToTarget = directionToTarget.sqrMagnitude;
+          float distance = _space.Distance(_caster, target);
+          float dSqrToTarget = distance * distance;
 
           if (dSqrToTarget < closestDistanceSqr)
           {
@@ -427,7 +422,7 @@ namespace CupkekGames.Combat
 
     private void OnDeath(CombatUnit combatUnit)
     {
-      _navMeshAgentController.StopAll();
+      _mover.Halt();
     }
 
     private void OnHit(CombatUnit defender, CombatHit hit)
@@ -441,8 +436,7 @@ namespace CupkekGames.Combat
 
       _primaryTarget = newTarget;
 
-      _navMeshAgentController.FollowTarget(_primaryTarget.View.transform, true, _debug);
-      _navMeshAgentController.StartMonitoringAgent();
+      _mover.Follow(_primaryTarget);
 
       if (_debug)
       {

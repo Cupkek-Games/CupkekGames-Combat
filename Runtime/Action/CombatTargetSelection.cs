@@ -20,20 +20,14 @@ namespace CupkekGames.Combat
     public bool Self;
     public bool Ally;
     public bool Enemy;
-    public static bool IsInRange(Transform caster, Transform target, float range, float tolerance, bool debug)
+    /// <summary>The units <paramref name="area"/> covers in the fight's space, filtered to the ones this selection may pick.</summary>
+    protected List<CombatUnit> FromArea(ICombatUnitManager combatUnitManager, CombatUnit caster, in CombatArea area)
     {
-      float rangeSqr = (range + tolerance) * (range + tolerance);
-      float distanceSqr = (caster.position - target.position).sqrMagnitude;
-      bool isInRange = distanceSqr <= rangeSqr;
-      if (debug)
-      {
-        Debug.Log($"IsInRange: {isInRange} {caster.position} {target.position} {rangeSqr} {distanceSqr} (tolerance: {tolerance})");
-      }
-      return isInRange;
-    }
-    public bool IsInRange(Transform caster, Transform target, float tolerance, bool debug)
-    {
-      return IsInRange(caster, target, Range, tolerance, debug);
+      ICombatSpace space = combatUnitManager.Space
+        ?? throw new InvalidOperationException("[CombatTargetSelection] the fight has no space (ICombatUnitManager.Space is null).");
+      List<CombatUnit> covered = new List<CombatUnit>();
+      space.Collect(area, covered);
+      return FilterTargets(caster, covered);
     }
 
     /// <summary>
@@ -90,11 +84,9 @@ namespace CupkekGames.Combat
       }
     }
 
-    public virtual Indicator ShowIndicator(IIndicatorPool indicatorPool, Vector3 position, Quaternion rotation, Color? color = null)
-    {
-      return null;
-    }
+    /// <summary>Shows this selection's area at a pose, sized through the fight's <paramref name="space"/>.</summary>
     public virtual Indicator ShowIndicator(
+      ICombatSpace space,
       IIndicatorPool indicatorPool,
       Vector3 position,
       Quaternion rotation,
@@ -105,33 +97,6 @@ namespace CupkekGames.Combat
     {
       return null;
     }
-    public List<CombatUnit> FromColliders(CombatUnit caster, List<Collider> colliders)
-    {
-      List<CombatUnit> result = new();
-
-      IEnumerable<Collider> ordered = colliders
-        .Where(collider =>
-          {
-            if (collider == null)
-            {
-              return false;
-            }
-
-            CombatUnitView view = collider.gameObject.GetComponent<CombatUnitView>();
-
-            return view != null;
-          }
-        );
-      // .OrderBy(collider => (collider.transform.position - center).sqrMagnitude);
-
-      foreach (Collider collider in ordered)
-      {
-        result.Add(collider.gameObject.GetComponent<CombatUnitView>().CombatUnit);
-      }
-
-      return FilterTargets(caster, result);
-    }
-
     public virtual IFeature CloneFeature()
     {
       // Target selection has no per-instance mutable state at runtime — sharing the authored instance is safe.
