@@ -15,6 +15,9 @@ namespace CupkekGames.Combat
         IIndicatorPool IndicatorPool { get; }
         CinemachineManager CinemachineManager { get; }
         CancellationTokenSource CancelToken { get; }
+
+        /// <summary>The fight's random numbers (crits, action ties), seeded per fight.</summary>
+        CombatRandom Random { get; }
         void PlayCriticalEffect(Transform target);
     }
 }

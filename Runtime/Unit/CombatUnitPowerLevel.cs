@@ -11,11 +11,11 @@ namespace CupkekGames.Combat
             _combatSettings = combatSettings;
         }
 
-        public bool TryCritical()
+        public bool TryCritical(CombatRandom random)
         {
             if (_owner.Attributes.CritChance == null) return false;
             float critChance = _owner.GetAttributeValue(_owner.Attributes.CritChance);
-            return UnityEngine.Random.Range(0f, 1f) <= critChance;
+            return random.Value() <= critChance;
         }
 
         public float ApplyCritical(float damage)

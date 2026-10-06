@@ -86,7 +86,7 @@ namespace CupkekGames.Combat
             }
 
             if (best.Count == 0) return null;
-            return best[UnityEngine.Random.Range(0, best.Count)];
+            return best[manager.Random.Range(0, best.Count)];
         }
 
         public IFeature CloneFeature() => this; // SO references, no mutable state to clone

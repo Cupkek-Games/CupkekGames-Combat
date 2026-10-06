@@ -57,11 +57,12 @@ namespace CupkekGames.Combat
           CombatUnit target,
           float rawAttack,
           DamageTypeDefinitionSO damageType,
-          CombatSource source)
+          CombatSource source,
+          CombatRandom random)
         {
             if (source == null) throw new System.ArgumentNullException(nameof(source), "A hit needs its source.");
 
-            bool isCrit = attacker.PowerLevel.TryCritical();
+            bool isCrit = attacker.PowerLevel.TryCritical(random);
             float attack = isCrit ? attacker.PowerLevel.ApplyCritical(rawAttack) : rawAttack;
 
             float elementMultiplier = ElementMultiplier(combatRules, attacker, target);

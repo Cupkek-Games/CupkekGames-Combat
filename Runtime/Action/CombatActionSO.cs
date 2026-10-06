@@ -31,7 +31,7 @@ namespace CupkekGames.Combat
     public static void AttackTarget(ICombatSettings combatSettings, ICombatManager manager, CombatUnit attacker, float attack,
       CombatUnit target, DamageTypeDefinitionSO damageType, CombatSource source)
     {
-      DamageResult result = CombatDamageCalculator.CalculateAttackDamage(combatSettings, attacker, target, attack, damageType, source);
+      DamageResult result = CombatDamageCalculator.CalculateAttackDamage(combatSettings, attacker, target, attack, damageType, source, manager.Random);
       CombatDamageCalculator.ApplyDamageAndVisuals(combatSettings, manager, attacker, target, result);
     }
 
