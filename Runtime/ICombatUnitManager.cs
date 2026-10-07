@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using UnityEngine;
 
 namespace CupkekGames.Combat
 {
@@ -11,6 +10,7 @@ namespace CupkekGames.Combat
         /// <summary>The fight's space: distances, areas and movement. Never null during a fight.</summary>
         ICombatSpace Space { get; }
         void SetTimeScale(float timeScale, CombatUnit except);
-        void SpawnEnemy(CombatUnitReference enemy, Vector2Int? position = null);
+        /// <summary>Brings <paramref name="unit"/> into the running fight on the enemy side, as near <paramref name="summoner"/> as the space allows (the game decides where), and starts it.</summary>
+        void Summon(CombatUnitReference unit, CombatUnit summoner);
     }
 }

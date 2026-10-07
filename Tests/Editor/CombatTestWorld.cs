@@ -190,7 +190,7 @@ namespace CupkekGames.Combat.Tests
         public ReadOnlyCollection<CombatUnit> CombatUnitsAlly => Allies.AsReadOnly();
         public ReadOnlyCollection<CombatUnit> CombatUnitsEnemy => Enemies.AsReadOnly();
         public void SetTimeScale(float timeScale, CombatUnit except) => TimeScales.Add(timeScale);
-        public void SpawnEnemy(CombatUnitReference enemy, Vector2Int? position = null) { }
+        public void Summon(CombatUnitReference unit, CombatUnit summoner) { }
         public ICombatSpace Space { get; } = new FakeSpace();
     }
 

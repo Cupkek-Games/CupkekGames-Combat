@@ -93,6 +93,8 @@ namespace CupkekGames.Combat
     public virtual void OnDisable()
     {
       _renderFeatureManager?.Unregister(Renderers);
+      // A hit's squash still running on a body that leaves (despawned, or the fight torn down).
+      if (_animationController != null) SquashAndStretch.Stop(_animationController.Transform);
 
       UnRegisterCombatUnit();
     }

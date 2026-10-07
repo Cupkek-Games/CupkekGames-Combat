@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 using CupkekGames.Units;
 
 namespace CupkekGames.Combat
@@ -27,7 +26,7 @@ namespace CupkekGames.Combat
       eventDatabaseCombat.OnUnitSpawned -= OnUnitSpawned;
     }
 
-    private void OnUnitSpawned(Vector2Int pos, CombatUnit unit)
+    private void OnUnitSpawned(CombatUnit unit)
     {
       RegisterCombatUnit(unit);
     }

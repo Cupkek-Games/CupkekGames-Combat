@@ -38,5 +38,14 @@ namespace CupkekGames.Combat
         /// the unit faces) over <paramref name="duration"/> seconds.
         /// </summary>
         void Dash(Vector3 offset, float duration, Ease ease, int avoidancePriority, CancellationToken cancellationToken);
+
+        /// <summary>Standing still where it belongs: not walking, not pushed. A unit starts an action only when settled.</summary>
+        bool IsSettled { get; }
+
+        /// <summary>Picks the unit up off the field (a drag in the formation phase); it holds no place until <see cref="SetDown"/>.</summary>
+        void Lift();
+
+        /// <summary>Sets a lifted unit down at <paramref name="world"/>; the space throws if it cannot stand exactly there.</summary>
+        void SetDown(Vector3 world);
     }
 }

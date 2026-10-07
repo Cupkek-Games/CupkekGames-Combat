@@ -14,7 +14,7 @@ namespace CupkekGames.Combat
     {
       var ctx = CombatActionContext.From(frame);
 
-      ctx.CombatManager.UnitManager.SpawnEnemy(_combatWaveEnemy);
+      ctx.CombatManager.UnitManager.Summon(_combatWaveEnemy, ctx.Caster);
 
       return BTNodeRuntimeState.Success;
     }

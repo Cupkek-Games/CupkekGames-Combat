@@ -16,7 +16,7 @@ namespace CupkekGames.Combat
     public event Action LoseEvent;
 
     // Unit lifecycle events (unified — consumers check CombatUnit.TeamId)
-    public event Action<Vector2Int, CombatUnit> OnUnitSpawned;
+    public event Action<CombatUnit> OnUnitSpawned;
     public event Action<CombatUnit> OnUnitDeath;
     public event Action<CombatUnit, CombatUnit, float> OnCriticalHitEvent;
 
@@ -38,12 +38,12 @@ namespace CupkekGames.Combat
     public void InvokeNextWaveEvent() => NextWaveEvent?.Invoke();
     public void InvokeWinEvent() => WinEvent?.Invoke();
     public void InvokeLoseEvent() => LoseEvent?.Invoke();
-    public void InvokeOnUnitSpawned(Vector2Int pos, CombatUnit unit)
+    public void InvokeOnUnitSpawned(CombatUnit unit)
     {
       // Every unit in the fight reports its hits here: one stream for the fight's log.
       unit.Health.OnHit -= RaiseHit;
       unit.Health.OnHit += RaiseHit;
-      OnUnitSpawned?.Invoke(pos, unit);
+      OnUnitSpawned?.Invoke(unit);
     }
 
     public void InvokeOnUltimate(CombatUnit caster, CombatActionSO action, UltimatePhase phase) => OnUltimate?.Invoke(caster, action, phase);

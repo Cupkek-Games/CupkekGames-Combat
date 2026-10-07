@@ -160,7 +160,7 @@ namespace CupkekGames.Combat
         return;
       }
 
-      if (_runner == null && !TrySelectNextAction())
+      if (_runner == null && !TrySelectNextAction(deltaTime))
       {
         return;
       }
@@ -175,9 +175,10 @@ namespace CupkekGames.Combat
 
     /// <summary>
     /// Finds a target, selects the next action, and sets up the action runner.
-    /// Returns <c>true</c> if a runner was successfully created; <c>false</c> if no valid target exists.
+    /// Returns <c>true</c> if a runner was set up; <c>false</c> if there is no target,
+    /// or the selected action reaches nobody yet.
     /// </summary>
-    private bool TrySelectNextAction()
+    private bool TrySelectNextAction(float deltaTime)
     {
       if (_primaryTarget == null || _primaryTarget.Health.Current <= 0)
       {
@@ -203,6 +204,14 @@ namespace CupkekGames.Combat
       CombatActionSO action = _caster.GetCombatAction(_actionType, _combatManager, _caster, _primaryTarget);
 
       OnActionSelect(action);
+
+      // An action is taken only once it reaches someone: until then the unit walks or
+      // turns toward its target, and an ultimate is neither queued (no freeze) nor reported.
+      if (action.GetTargets(_combatManager.UnitManager, _caster, _primaryTarget, _debug).Count == 0)
+      {
+        ThreatTableCheck(deltaTime, false);
+        return false;
+      }
 
       int skillLevel = _caster.EffectiveSkillRank;
 
