@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using CupkekGames.TimeSystem;
 
 namespace CupkekGames.Combat
 {
@@ -25,5 +27,13 @@ namespace CupkekGames.Combat
 
         /// <summary>The mover for one unit, made once when its AI is set up.</summary>
         ICombatMover CreateMover(CombatUnitView view);
+
+        /// <summary>
+        /// Steps a unit on its time: calls <paramref name="step"/> with the seconds each step
+        /// covers, every frame on a navmesh, every fixed tick on a grid (units in turn, so a
+        /// fight plays out the same at any frame rate). A paused <paramref name="time"/> takes
+        /// no steps. Dispose the result to stop.
+        /// </summary>
+        IDisposable Drive(TimeContext time, Action<float> step);
     }
 }

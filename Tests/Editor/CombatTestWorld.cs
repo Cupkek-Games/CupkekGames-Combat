@@ -202,5 +202,6 @@ namespace CupkekGames.Combat.Tests
         public void Collect(in CombatArea area, List<CombatUnit> results) => results.Clear();
         public float ToWorld(float units) => units;
         public ICombatMover CreateMover(CombatUnitView view) => throw new System.NotSupportedException("The test world moves nothing.");
+        public System.IDisposable Drive(TimeContext time, System.Action<float> step) => throw new System.NotSupportedException("The test world steps nothing.");
     }
 }

@@ -30,6 +30,10 @@ namespace CupkekGames.Combat
     public CombatUnitHighlightController HighlightController => _highlightController;
     [SerializeField] private Transform _healthBarPosition;
     public Transform HealthBarTransform => _healthBarPosition;
+    [Tooltip("The animation kind this unit plays while it moves in a fight on a grid (Walk, or Run for a unit that runs to its targets).")]
+    [SerializeField] private string _moveAnimationKind = AnimationKinds.Walk;
+    /// <summary>The animation kind played while the unit moves between tiles.</summary>
+    public string MoveAnimationKind => _moveAnimationKind;
     private CharacterVisualAccessories _equipments;
     public CharacterVisualAccessories Equipments => _equipments;
     private ShaderColorController _shaderColorController;

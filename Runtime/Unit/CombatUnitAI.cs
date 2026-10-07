@@ -17,6 +17,8 @@ namespace CupkekGames.Combat
     // Movement, through the fight's space (made in SetupAI).
     private ICombatSpace _space;
     private ICombatMover _mover;
+    // Steps OnUpdate on the space's clock while the AI runs.
+    private IDisposable _drive;
 
     /// <summary>How this unit moves; null until <see cref="SetupAI"/>.</summary>
     public ICombatMover Mover => _mover;
@@ -85,7 +87,7 @@ namespace CupkekGames.Combat
 
       _caster.OnDeathEvent += OnDeath;
       _caster.Health.OnHit += OnHit;
-      _caster.TimeBundle.TimeContext.OnUpdate += OnUpdate;
+      _drive = _space.Drive(_caster.TimeBundle.TimeContext, OnUpdate);
       _running = true;
 
       _mover.Start(_caster.TimeBundle);
@@ -105,7 +107,8 @@ namespace CupkekGames.Combat
 
         _caster.OnDeathEvent -= OnDeath;
         _caster.Health.OnHit -= OnHit;
-        _caster.TimeBundle.TimeContext.OnUpdate -= OnUpdate;
+        _drive?.Dispose();
+        _drive = null;
 
         // A stopped unit keeps no run: a selected ultimate is dropped (and
         // reported), any other run starts over when the unit moves again.

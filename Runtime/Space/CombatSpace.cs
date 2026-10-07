@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using CupkekGames.TimeSystem;
 using UnityEngine;
 
 namespace CupkekGames.Combat
@@ -15,5 +17,6 @@ namespace CupkekGames.Combat
         public abstract void Collect(in CombatArea area, List<CombatUnit> results);
         public abstract float ToWorld(float units);
         public abstract ICombatMover CreateMover(CombatUnitView view);
+        public abstract IDisposable Drive(TimeContext time, Action<float> step);
     }
 }
