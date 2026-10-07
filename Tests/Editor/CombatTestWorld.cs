@@ -173,8 +173,6 @@ namespace CupkekGames.Combat.Tests
         public int FullManaActionTypeId => 1;
         public IReadOnlyList<ActionManaEffect> ActionManaEffects { get; } = new List<ActionManaEffect>();
         public int TakeDamageManaInterval => int.MaxValue;
-        public float ThreatTableCheckInterval => 1f;
-        public int DistanceThreat => 10;
         public float AIColliderRadius => 0.5f;
         public float AIColliderHeight => 2f;
         public Vector3 AIColliderCenter => Vector3.zero;
@@ -192,6 +190,12 @@ namespace CupkekGames.Combat.Tests
         public void SetTimeScale(float timeScale, CombatUnit except) => TimeScales.Add(timeScale);
         public void Summon(CombatUnitReference unit, CombatUnit summoner) { }
         public ICombatSpace Space { get; } = new FakeSpace();
+        public ICombatTargeting Targeting { get; }
+
+        public FakeUnitManager()
+        {
+            Targeting = new CombatThreatTargeting(this, 1f, 10);
+        }
     }
 
     /// <summary>A space that measures between the views in metres (one combat unit is one metre) and covers nothing.</summary>
@@ -199,6 +203,7 @@ namespace CupkekGames.Combat.Tests
     {
         public float Distance(CombatUnit a, CombatUnit b) => Vector3.Distance(a.View.transform.position, b.View.transform.position);
         public bool InRange(CombatUnit caster, CombatUnit target, float range) => Distance(caster, target) <= range;
+        public int StepsToReach(CombatUnit caster, CombatUnit target, float range) => Mathf.Max(0, Mathf.CeilToInt(Distance(caster, target) - range));
         public void Collect(in CombatArea area, List<CombatUnit> results) => results.Clear();
         public float ToWorld(float units) => units;
         public ICombatMover CreateMover(CombatUnitView view) => throw new System.NotSupportedException("The test world moves nothing.");

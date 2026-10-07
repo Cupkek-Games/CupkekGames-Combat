@@ -19,6 +19,14 @@ namespace CupkekGames.Combat
         /// <summary>Whether <paramref name="target"/> is within <paramref name="range"/> combat units of <paramref name="caster"/>, with the space's own tolerance.</summary>
         bool InRange(CombatUnit caster, CombatUnit target, float range);
 
+        /// <summary>
+        /// How many steps <paramref name="caster"/> still has to walk, around whoever is in the
+        /// way, before <paramref name="target"/> is within <paramref name="range"/>: 0 when it
+        /// already is, <see cref="int.MaxValue"/> when no way gets there now. A step is the
+        /// space's own (one tile on a grid).
+        /// </summary>
+        int StepsToReach(CombatUnit caster, CombatUnit target, float range);
+
         /// <summary>Adds every unit inside <paramref name="area"/> to <paramref name="results"/> (cleared first), both sides, in the space's own order.</summary>
         void Collect(in CombatArea area, List<CombatUnit> results);
 

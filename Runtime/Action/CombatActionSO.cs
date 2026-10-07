@@ -25,7 +25,7 @@ namespace CupkekGames.Combat
     public Sprite Icon;
 
     [SerializeReference]
-    public CombatTargetSelection TargetSelection = new CombatTargetSelectionPrimaryTarget();
+    public CombatTargetSelection TargetSelection = new CombatTargetSelectionPrimaryTarget { Enemy = true };
 
     /// <summary>Deals <paramref name="attack"/> to <paramref name="target"/> through crit, element and defense; the hit names <paramref name="source"/>.</summary>
     public static void AttackTarget(ICombatSettings combatSettings, ICombatManager manager, CombatUnit attacker, float attack,

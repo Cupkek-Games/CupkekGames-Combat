@@ -11,7 +11,8 @@ namespace CupkekGames.Combat.Tests
     /// level, value scaling off the caster or the target's max health, the
     /// attack-element fold, mana drain, the hit choke point (the last hit, the
     /// killer, the hit raised before the death), cancelling a queued ultimate,
-    /// threat only from actions, and the shield-cast fold.
+    /// an action that can pick nobody never taken, threat only from actions, and the
+    /// shield-cast fold.
     /// </summary>
     public class CombatSeamTests
     {
@@ -198,6 +199,35 @@ namespace CupkekGames.Combat.Tests
 
             second.Health.TakeDamage(new CombatHit(null, new CombatSource(CombatSourceKind.Environment, "Fall"), 1000));
             Assert.IsFalse(ultimates.HasNext, "a fallen caster leaves the queue");
+        }
+
+        private CombatActionSO ActionPicking(CombatTargetSelection selection)
+        {
+            CombatActionSO action = _world.Own(UnityEngine.ScriptableObject.CreateInstance<CombatActionSO>());
+            action.TargetSelection = selection;
+            return action;
+        }
+
+        [Test]
+        public void AnActionThatCanPickNobody_IsNeverTaken_SoItsSlotGivesWay()
+        {
+            CombatActionSO placeholder = ActionPicking(new CombatTargetSelectionPrimaryTarget());
+            CombatActionSO strike = ActionPicking(new CombatTargetSelectionPrimaryTarget { Enemy = true, Range = 1f });
+            CombatActionSO shield = ActionPicking(new CombatTargetSelection { Self = true, Ally = true });
+            Assert.IsFalse(placeholder.TargetSelection.CanSelectAnyone, "it takes no side");
+            Assert.IsTrue(strike.TargetSelection.CanSelectAnyone);
+            Assert.IsTrue(shield.TargetSelection.CanSelectAnyone);
+            Assert.IsFalse(new CombatTargetSelectionPrimaryTarget { Self = true, Ally = true }.CanSelectAnyone,
+                "a unit's own target is an opponent: only Enemy picks it");
+            Assert.IsTrue(_world.Own(UnityEngine.ScriptableObject.CreateInstance<CombatActionSO>()).TargetSelection.CanSelectAnyone,
+                "a new action goes after the enemy");
+
+            CombatAttributesDefinition combat = new CombatAttributesDefinition();
+            combat.ActionSlots.Add(new ActionSlot { ActionTypeId = 2, Actions = new List<CombatActionSO> { placeholder, placeholder } });
+            combat.ActionSlots.Add(new ActionSlot { ActionTypeId = 1, Actions = new List<CombatActionSO> { placeholder, strike } });
+
+            Assert.IsNull(combat.GetCombatAction(2, null, null, null), "a slot of placeholders has nothing to take");
+            Assert.AreSame(strike, combat.GetCombatAction(1, null, null, null), "a placeholder beside a real action is passed over");
         }
 
         // ── Threat ───────────────────────────────────────────────────────

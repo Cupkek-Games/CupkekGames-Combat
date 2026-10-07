@@ -20,6 +20,10 @@ namespace CupkekGames.Combat
     public bool Self;
     public bool Ally;
     public bool Enemy;
+
+    /// <summary>Whether this selection may ever pick anyone: false when it takes no side (an action authored as an empty placeholder).</summary>
+    public virtual bool CanSelectAnyone => Self || Ally || Enemy;
+
     /// <summary>The units <paramref name="area"/> covers in the fight's space, filtered to the ones this selection may pick.</summary>
     protected List<CombatUnit> FromArea(ICombatUnitManager combatUnitManager, CombatUnit caster, in CombatArea area)
     {

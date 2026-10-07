@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using System.Collections.ObjectModel;
 using CupkekGames.BehaviourTrees;
 
 namespace CupkekGames.Combat
@@ -28,10 +27,16 @@ namespace CupkekGames.Combat
     public bool IsRunning => _running;
     private CombatUnit _caster = null;
     private CombatUnit _primaryTarget = null;
+    /// <summary>Whom the unit goes after; null while it has nobody.</summary>
+    public CombatUnit Target => _primaryTarget;
     private CombatUnitThreatTable _combatUnitThreatTable = new CombatUnitThreatTable();
     public CombatUnitThreatTable CombatUnitThreatTable => _combatUnitThreatTable;
-    private float _threatTableCheckCooldown = 0;
+    // How the fight's units pick whom they go after, and the seconds since this one last asked.
+    private ICombatTargeting _targeting;
+    private float _sinceTargeting;
     private CombatActionRunner _runner;
+    /// <summary>An action's run is set up: from the tick it starts (an ultimate's wait for its queue turn included) to its end.</summary>
+    public bool IsActing => _runner != null;
     private int _actionType;
     // The action selected for the current run (reported with the ultimate's phases).
     private CombatActionSO _action;
@@ -52,6 +57,8 @@ namespace CupkekGames.Combat
       _space = combatManager.UnitManager.Space
         ?? throw new InvalidOperationException($"[CombatUnitAI] '{gameObject.name}': the fight has no space (ICombatUnitManager.Space is null); give the fight a CombatSpace.");
       _mover = _space.CreateMover(caster.View);
+      _targeting = combatManager.UnitManager.Targeting
+        ?? throw new InvalidOperationException($"[CombatUnitAI] '{gameObject.name}': the fight has no targeting (ICombatUnitManager.Targeting is null); name one, e.g. CombatThreatTargeting.");
 
       _combatSettings = combatSettings;
 
@@ -131,6 +138,7 @@ namespace CupkekGames.Combat
       }
 
       _primaryTarget = null;
+      _sinceTargeting = 0f;
     }
 
     private void OnUpdate(float deltaTime)
@@ -174,42 +182,38 @@ namespace CupkekGames.Combat
     }
 
     /// <summary>
-    /// Finds a target, selects the next action, and sets up the action runner.
-    /// Returns <c>true</c> if a runner was set up; <c>false</c> if there is no target,
-    /// or the selected action reaches nobody yet.
+    /// Picks whom to go after and the next action, and sets up the action's run. Returns
+    /// <c>true</c> if a run was set up; <c>false</c> while there is nobody to go after, while
+    /// the unit is not settled on its place (walking or pushed), or while the action reaches
+    /// nobody yet.
     /// </summary>
     private bool TrySelectNextAction(float deltaTime)
     {
-      if (_primaryTarget == null || _primaryTarget.Health.Current <= 0)
+      if (_primaryTarget != null && _primaryTarget.Health.Current <= 0) _primaryTarget = null;
+
+      CombatActionSO action = SelectAction();
+      _sinceTargeting += deltaTime;
+      if (_primaryTarget == null || _sinceTargeting >= _targeting.Interval)
       {
-        FindAndFollowTarget();
+        CombatUnit before = _primaryTarget;
+        Retarget(action.TargetSelection.Range);
+
+        // The pick among a slot's actions can turn on the target.
+        if (_primaryTarget != before) action = SelectAction();
       }
 
-      // If still no valid target after searching (e.g., combat ended), skip this update
       if (_primaryTarget == null)
       {
         return false;
       }
 
-      // Action Selection
-      if (_silenced)
-      {
-        _actionType = CombatActionType.Normal;
-      }
-      else
-      {
-        _actionType = _caster.Mana.GetNextActionType();
-      }
+      _mover.SetReach(action.TargetSelection.Range);
 
-      CombatActionSO action = _caster.GetCombatAction(_actionType, _combatManager, _caster, _primaryTarget);
-
-      OnActionSelect(action);
-
-      // An action is taken only once it reaches someone: until then the unit walks or
-      // turns toward its target, and an ultimate is neither queued (no freeze) nor reported.
-      if (action.GetTargets(_combatManager.UnitManager, _caster, _primaryTarget, _debug).Count == 0)
+      // An action starts only once the unit stands settled on its place and the action
+      // reaches someone: until then it walks or turns toward its target, and an ultimate is
+      // neither queued (no freeze) nor reported.
+      if (!_mover.IsSettled || action.GetTargets(_combatManager.UnitManager, _caster, _primaryTarget, _debug).Count == 0)
       {
-        ThreatTableCheck(deltaTime, false);
         return false;
       }
 
@@ -279,7 +283,15 @@ namespace CupkekGames.Combat
     {
       if (_actionType == CombatActionType.Ultimate) _ultimateStarted = true;
 
+      CombatActionSO done = _action;
       BTNodeRuntimeState state = _runner.UpdateTree(_combatManager.UnitManager, _primaryTarget, deltaTime, _debug);
+
+      // The run's own hits can end it: the last enemy falls and the fight stops every unit,
+      // which clears the run and reports a selected ultimate. Nothing is left to finish.
+      if (_runner == null)
+      {
+        return;
+      }
 
       if (state == BTNodeRuntimeState.Fail)
       {
@@ -287,7 +299,7 @@ namespace CupkekGames.Combat
         if (_actionType == CombatActionType.Ultimate)
         {
           _combatManager.CombatUltimateManager.Dequeue();
-          _combatManager.EventDatabase.InvokeOnUltimate(_caster, _action, UltimatePhase.Cancelled);
+          _combatManager.EventDatabase.InvokeOnUltimate(_caster, done, UltimatePhase.Cancelled);
 
           if (_debug)
           {
@@ -299,15 +311,13 @@ namespace CupkekGames.Combat
         _action = null;
         _ultimateStarted = false;
         _actionType = CombatActionType.Skip;
-
-        ThreatTableCheck(deltaTime, false);
       }
       else if (state == BTNodeRuntimeState.Success)
       {
         if (_actionType == CombatActionType.Ultimate)
         {
           _combatManager.CombatUltimateManager.Dequeue();
-          _combatManager.EventDatabase.InvokeOnUltimate(_caster, _action, UltimatePhase.Completed);
+          _combatManager.EventDatabase.InvokeOnUltimate(_caster, done, UltimatePhase.Completed);
 
           if (_debug)
           {
@@ -323,9 +333,8 @@ namespace CupkekGames.Combat
         {
           _cooldown = _caster.GetActionCooldownSeconds();
           _caster.Mana.OnTakeAction(_actionType);
+          Retarget(done.TargetSelection.Range);
         }
-
-        ThreatTableCheck(deltaTime, true);
       }
       else
       {
@@ -339,97 +348,34 @@ namespace CupkekGames.Combat
       }
     }
 
-    private void ThreatTableCheck(float deltaTime, bool force)
+    // The action for this turn: the ultimate at full mana unless silenced. An ultimate that
+    // can never reach anyone (its slot holds no action that picks someone) gives way to the
+    // normal action, so a placeholder never locks its unit out.
+    private CombatActionSO SelectAction()
     {
-      _threatTableCheckCooldown += deltaTime;
-      if (force || _threatTableCheckCooldown >= _combatSettings.ThreatTableCheckInterval)
+      int normal = _combatSettings.DefaultActionTypeId;
+      _actionType = _silenced ? normal : _caster.Mana.GetNextActionType();
+      CombatActionSO action = _caster.GetCombatAction(_actionType, _combatManager, _caster, _primaryTarget);
+      if (action == null && _actionType != normal)
       {
-        if (_debug)
-        {
-          Debug.Log("ThreatTableCheck executing...");
-        }
+        _actionType = normal;
+        action = _caster.GetCombatAction(normal, _combatManager, _caster, _primaryTarget);
+      }
 
-        _threatTableCheckCooldown = 0;
-        FindAndFollowTarget();
-      }
-      else if (_debug)
-      {
-        Debug.Log("ThreatTableCheck skipped");
-      }
+      return action ?? throw new InvalidOperationException($"[CombatUnitAI] '{_caster.DataReference.Key}' has no action that can pick anyone in its normal slot ({normal}).");
     }
 
-    private void OnActionSelect(CombatActionSO action)
+    // Asks the fight's targeting whom to go after, and follows it.
+    private void Retarget(float range)
     {
-      _mover.SetReach(action.TargetSelection.Range);
-    }
+      _sinceTargeting = 0f;
+      _primaryTarget = _targeting.Pick(_caster, _primaryTarget, range);
+      _mover.Follow(_primaryTarget);
 
-    private void FindAndFollowTarget()
-    {
-      if (_caster == null)
+      if (_debug)
       {
-        if (_debug)
-        {
-          Debug.Log("Caster is null, cannot find target.");
-        }
-
-        return;
+        Debug.Log("Target: " + (_primaryTarget != null ? _primaryTarget.DataReference.Key : "none"));
       }
-
-      // Enemy collection
-      ReadOnlyCollection<CombatUnit> targets;
-
-      if (_combatManager.UnitManager.CombatUnitsAlly.Contains(_caster))
-      {
-        targets = _combatManager.UnitManager.CombatUnitsEnemy;
-      }
-      else
-      {
-        targets = _combatManager.UnitManager.CombatUnitsAlly;
-      }
-
-      if (targets.Count == 0)
-      {
-        if (_debug)
-        {
-          Debug.Log("No targets found for " + _caster.DataReference.Key);
-        }
-
-        return;
-      }
-      else if (targets.Count == 1)
-      {
-        _combatUnitThreatTable.AddThreat(targets[0], _combatSettings.DistanceThreat);
-      }
-      else
-      {
-        (CombatUnit closest, float distanceSqr) = FindClosestEnemy(targets);
-        _combatUnitThreatTable.AddThreat(closest, (int)(_combatSettings.DistanceThreat / distanceSqr));
-      }
-
-      UpdatePrimaryTarget();
-    }
-
-    private (CombatUnit, float) FindClosestEnemy(ReadOnlyCollection<CombatUnit> targets)
-    {
-      CombatUnit closest = null;
-      float closestDistanceSqr = Mathf.Infinity;
-
-      foreach (CombatUnit target in targets)
-      {
-        if (target != null && target.View != null && target.Health.Current > 0)
-        {
-          float distance = _space.Distance(_caster, target);
-          float dSqrToTarget = distance * distance;
-
-          if (dSqrToTarget < closestDistanceSqr)
-          {
-            closestDistanceSqr = dSqrToTarget;
-            closest = target;
-          }
-        }
-      }
-
-      return (closest, closestDistanceSqr);
     }
 
     private void OnDeath(CombatUnit combatUnit)
@@ -440,20 +386,6 @@ namespace CupkekGames.Combat
     private void OnHit(CombatUnit defender, CombatHit hit)
     {
       _combatUnitThreatTable.AddThreat(hit);
-    }
-
-    private void UpdatePrimaryTarget()
-    {
-      CombatUnit newTarget = _combatUnitThreatTable.GetHighestThreatTarget();
-
-      _primaryTarget = newTarget;
-
-      _mover.Follow(_primaryTarget);
-
-      if (_debug)
-      {
-        Debug.Log("Primary target updated: " + (_primaryTarget != null ? _primaryTarget.DataReference.Key : "null"));
-      }
     }
 
     // Mechanics

@@ -4,13 +4,22 @@ using UnityEngine;
 
 namespace CupkekGames.Combat
 {
+  /// <summary>The unit's own target, an opponent, once it is within <see cref="CombatTargetSelection.Range"/>; only with <see cref="CombatTargetSelection.Enemy"/> set.</summary>
   [Serializable]
   public class CombatTargetSelectionPrimaryTarget : CombatTargetSelection
   {
+    public override bool CanSelectAnyone => Enemy;
+
     public override List<CombatUnit> GetTargets(ICombatUnitManager combatUnitManager, CombatUnit caster,
       CombatUnit primaryTarget, bool debug)
     {
       List<CombatUnit> result = new List<CombatUnit>();
+
+      if (!Enemy)
+      {
+        if (debug) Debug.Log("selects no enemy");
+        return result;
+      }
 
       if (caster == null)
       {

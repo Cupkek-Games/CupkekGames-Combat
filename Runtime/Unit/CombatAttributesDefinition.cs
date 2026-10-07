@@ -55,6 +55,11 @@ namespace CupkekGames.Combat
             }
         }
 
+        /// <summary>
+        /// The action of <paramref name="actionType"/> the unit takes next: of the slot's
+        /// actions that can ever pick someone (<see cref="CombatTargetSelection.CanSelectAnyone"/>),
+        /// the one most useful now, ties by the fight's random. Null when the slot has none.
+        /// </summary>
         public CombatActionSO GetCombatAction(int actionType, ICombatManager manager, CombatUnit caster, CombatUnit enemy)
         {
             List<CombatActionSO> actions = GetActions(actionType);
@@ -64,14 +69,24 @@ namespace CupkekGames.Combat
 
         private CombatActionSO SelectAction(List<CombatActionSO> list, ICombatManager manager, CombatUnit caster, CombatUnit enemy)
         {
-            if (list.Count == 0) return null;
-            if (list.Count == 1) return list[0];
+            CombatActionSO only = null;
+            int castable = 0;
+            foreach (CombatActionSO action in list)
+            {
+                if (!action.TargetSelection.CanSelectAnyone) continue;
+                only = action;
+                castable++;
+            }
+
+            if (castable <= 1) return only;
 
             float highestPercentage = 0.0f;
             List<CombatActionSO> best = new();
 
             foreach (CombatActionSO action in list)
             {
+                if (!action.TargetSelection.CanSelectAnyone) continue;
+
                 float percentage = action.GetUtilityAIPercentage(manager.UnitManager, caster, enemy, false);
                 if (percentage > highestPercentage)
                 {
