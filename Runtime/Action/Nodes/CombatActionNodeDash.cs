@@ -11,7 +11,7 @@ namespace CupkekGames.Combat
         [SerializeField] private Vector3[] _dashDistance;
         [SerializeField] private float _duration = 1f;
         [SerializeField] private Ease _ease = Ease.OutSine;
-        [SerializeField] private int _avoidancePriority = 51;
+        [SerializeField] private CombatDashMode _mode = CombatDashMode.Push;
 
         protected override BTNodeRuntimeState OnUpdate(GraphFrame frame, float deltaTime)
         {
@@ -26,7 +26,7 @@ namespace CupkekGames.Combat
             foreach (CombatUnit target in GetTargetList(ctx.Caster, ctx.TargetList))
             {
                 Vector3 offset = target.View.transform.rotation * dash;
-                target.View.CombatUnitAI.Mover.Dash(offset, _duration, _ease, _avoidancePriority, cancellationToken);
+                target.View.CombatUnitAI.Mover.Dash(offset, _duration, _ease, _mode, cancellationToken);
             }
 
             return BTNodeRuntimeState.Success;

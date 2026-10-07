@@ -1,20 +1,21 @@
+using System;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using CupkekGames.BehaviourTrees;
 using CupkekGames.Graphs;
-using CupkekGames.ShapeDrawing;
-using CupkekGames.AddressableAssets;
-using CupkekGames.SceneManagement;
-using CupkekGames.Sequencer;
 using CupkekGames.Services;
-using CupkekGames.Settings;
-using CupkekGames.GameSave;
 
 using CupkekGames.VFX;
 
 namespace CupkekGames.Combat
 {
+  /// <summary>
+  /// The warning before an area hits: when the cast starts it locks the action's area (where
+  /// the caster aims now) into the run, and the fight's space draws exactly those cells. The
+  /// fill rises over <c>_durationFill</c>; then the targets are taken from the locked area
+  /// (whoever stands on the warned cells) and the child runs.
+  /// </summary>
   public class CombatActionNodeShowIndicator : BTNodeDecorator
   {
     [SerializeField] private float _durationFill;
@@ -23,7 +24,7 @@ namespace CupkekGames.Combat
     [SerializeField] private Color _indicatorColor = new Color(0, 1, 1, 0.3f);
 
     // State
-    private Indicator _indicator = null;
+    private CombatAreaMark _mark = null;
     private float _passed = -1f;
     private CancellationToken? _cancellationToken;
     private bool _isFilled = false;
@@ -41,31 +42,34 @@ namespace CupkekGames.Combat
 
       if (_cancellationToken.Value.IsCancellationRequested)
       {
+        HideNow();
         return BTNodeRuntimeState.Fail;
       }
 
       CombatUnit caster = ctx.Caster;
 
-      if (_indicator == null)
+      if (_mark == null)
       {
+        CombatTargetSelection selection = ctx.ActionSO.TargetSelection;
+        if (!selection.HasArea)
+        {
+          throw new InvalidOperationException($"[CombatActionNodeShowIndicator] '{ctx.ActionSO.name}' warns of an area, but its target selection ({selection.GetType().Name}) has none: give it an area selection.");
+        }
+
+        ICombatUnitManager units = ctx.CombatManager.UnitManager;
+        if (!selection.TryGetArea(units, caster, ctx.PrimaryTarget, ctx.ImpactPosition, out CombatArea area))
+        {
+          ResetState();
+          return BTNodeRuntimeState.Fail;
+        }
+
+        ctx.Area = area;
         _passed = deltaTime;
-
-        GameObject casterGO = caster.View.gameObject;
-        Transform transform = casterGO.transform;
-        transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
-
-        _indicator = ctx.ActionSO.ShowIndicator(
-          ctx.CombatManager.UnitManager.Space,
-          ctx.CombatManager.IndicatorPool,
-          position,
-          rotation,
-          _durationFill,
-          _cancellationToken,
-          caster.TimeBundle,
-          _indicatorColor);
+        _mark = units.Space.ShowArea(area, _indicatorColor);
+        _mark.Fill(_durationFill, caster.TimeBundle, _cancellationToken.Value);
 
         RenderFeatureManager renderFeatureManager = ServiceLocator.Get<RenderFeatureManager>();
-        renderFeatureManager.UnDarkenAsync(_indicator.gameObject, true).Forget();
+        renderFeatureManager.UnDarkenAsync(_mark.gameObject, true).Forget();
       }
       else
       {
@@ -78,10 +82,10 @@ namespace CupkekGames.Combat
         {
           _isFilled = true;
 
-          // Update Targets
+          // The hit lands on the locked area's cells.
           CombatActionNodeTargetUpdate.UpdateTargetList(frame);
 
-          _indicator.DelayedDisable(_durationDisable, caster.TimeBundle).Forget();
+          _mark.HideAfter(_durationDisable, caster.TimeBundle).Forget();
         }
 
         BTNodeRuntimeState state = BTNodeRuntimeState.Success;
@@ -94,10 +98,7 @@ namespace CupkekGames.Combat
 
         if (state == BTNodeRuntimeState.Success || state == BTNodeRuntimeState.Fail)
         {
-          // Reset for next call
-          _passed = -1f;
-          _indicator = null;
-          _cancellationToken = null;
+          ResetState();
         }
 
         return state;
@@ -108,8 +109,20 @@ namespace CupkekGames.Combat
 
     protected override void OnReset()
     {
+      // A run cut short (a stun, the fight's end) takes its warning down.
+      if (!_isFilled) HideNow();
+      ResetState();
+    }
+
+    private void HideNow()
+    {
+      if (_mark != null) _mark.Hide();
+    }
+
+    private void ResetState()
+    {
       _passed = -1f;
-      _indicator = null;
+      _mark = null;
       _cancellationToken = null;
       _isFilled = false;
     }

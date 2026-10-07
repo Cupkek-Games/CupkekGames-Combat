@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CupkekGames.TimeSystem;
+using UnityEngine;
 
 namespace CupkekGames.Combat
 {
@@ -30,7 +31,14 @@ namespace CupkekGames.Combat
         /// <summary>Adds every unit inside <paramref name="area"/> to <paramref name="results"/> (cleared first), both sides, in the space's own order.</summary>
         void Collect(in CombatArea area, List<CombatUnit> results);
 
-        /// <summary>A length in combat units as world metres (indicators, effects).</summary>
+        /// <summary>
+        /// Draws the warning for <paramref name="area"/> in <paramref name="color"/>: exactly the
+        /// cells <see cref="Collect"/> takes for it, outlined, its fill empty until
+        /// <see cref="CombatAreaMark.Fill"/>.
+        /// </summary>
+        CombatAreaMark ShowArea(in CombatArea area, Color color);
+
+        /// <summary>A length in combat units as world metres (effects).</summary>
         float ToWorld(float units);
 
         /// <summary>The mover for one unit, made once when its AI is set up.</summary>

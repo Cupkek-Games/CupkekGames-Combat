@@ -1,4 +1,3 @@
-using CupkekGames.ShapeDrawing;
 using UnityEngine;
 
 namespace CupkekGames.Combat
@@ -20,7 +19,6 @@ namespace CupkekGames.Combat
 
         // UI
         int BossBarMinTier { get; }
-        IndicatorSettings IndicatorSettings { get; }
 
         // World Space UI Scaling
         float WorldSpaceMinDistance { get; }

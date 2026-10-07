@@ -1,42 +1,31 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using CupkekGames.ShapeDrawing;
-using CupkekGames.TimeSystem;
 using UnityEngine;
 
 namespace CupkekGames.Combat
 {
+  /// <summary>A slice of a circle around the caster, centred on the way to its target.</summary>
   [Serializable]
   public class CombatTargetSelectionAreaArc : CombatTargetSelection
   {
     public float Radius;
     public float Angle;
+
+    public override bool HasArea => true;
+
     public override List<CombatUnit> GetTargets(ICombatUnitManager combatUnitManager, CombatUnit caster, CombatUnit primaryTarget, bool debug)
+      => TryGetArea(combatUnitManager, caster, primaryTarget, null, out CombatArea area)
+        ? FromArea(combatUnitManager, caster, area)
+        : new List<CombatUnit>();
+
+    public override bool TryGetArea(ICombatUnitManager combatUnitManager, CombatUnit caster, CombatUnit primaryTarget,
+      Vector3? impact, out CombatArea area)
     {
-      Transform center = caster.View.transform;
+      area = default;
+      if (primaryTarget?.View == null) return false;
 
-      return FromArea(combatUnitManager, caster, CombatArea.Arc(center.position, center.forward, Radius, Angle));
-    }
-
-    public override Indicator ShowIndicator(
-      ICombatSpace space,
-      IIndicatorPool indicatorPool,
-      Vector3 position,
-      Quaternion rotation,
-      float duration,
-      CancellationToken? ct,
-      TimeBundle timeBundle,
-      Color? color = null)
-    {
-      Indicator indicator = indicatorPool.ShowArcRegion(position, rotation, space.ToWorld(Radius), Angle, color);
-
-      if (duration > 0)
-      {
-        indicator.AnimateFill(duration, ct.Value, timeBundle).Forget();
-      }
-
-      return indicator;
+      area = CombatArea.Arc(caster.View.transform.position, primaryTarget.View.transform.position, Radius, Angle);
+      return true;
     }
   }
 }

@@ -1,10 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using CupkekGames.Data;
-using CupkekGames.ShapeDrawing;
-using CupkekGames.TimeSystem;
 using UnityEngine;
 
 namespace CupkekGames.Combat
@@ -23,6 +19,25 @@ namespace CupkekGames.Combat
 
     /// <summary>Whether this selection may ever pick anyone: false when it takes no side (an action authored as an empty placeholder).</summary>
     public virtual bool CanSelectAnyone => Self || Ally || Enemy;
+
+    /// <summary>Whether this selection covers an area of the field (so a warning can show it), not its unit's own target or the whole field.</summary>
+    public virtual bool HasArea => false;
+
+    /// <summary>
+    /// The area this selection covers for a cast now, aimed where its caster aims; false
+    /// for a selection without one (<see cref="HasArea"/>) and for an aimed area with
+    /// nobody to aim at. <paramref name="impact"/> is where a carrying projectile landed.
+    /// </summary>
+    public virtual bool TryGetArea(ICombatUnitManager combatUnitManager, CombatUnit caster, CombatUnit primaryTarget,
+      Vector3? impact, out CombatArea area)
+    {
+      area = default;
+      return false;
+    }
+
+    /// <summary>The units standing in <paramref name="area"/> now (an area locked when a cast started), filtered to the ones this selection may pick.</summary>
+    public List<CombatUnit> GetTargets(ICombatUnitManager combatUnitManager, CombatUnit caster, in CombatArea area)
+      => FromArea(combatUnitManager, caster, area);
 
     /// <summary>The units <paramref name="area"/> covers in the fight's space, filtered to the ones this selection may pick.</summary>
     protected List<CombatUnit> FromArea(ICombatUnitManager combatUnitManager, CombatUnit caster, in CombatArea area)
@@ -88,19 +103,6 @@ namespace CupkekGames.Combat
       }
     }
 
-    /// <summary>Shows this selection's area at a pose, sized through the fight's <paramref name="space"/>.</summary>
-    public virtual Indicator ShowIndicator(
-      ICombatSpace space,
-      IIndicatorPool indicatorPool,
-      Vector3 position,
-      Quaternion rotation,
-      float duration,
-      CancellationToken? ct,
-      TimeBundle timeBundle,
-      Color? color = null)
-    {
-      return null;
-    }
     public virtual IFeature CloneFeature()
     {
       // Target selection has no per-instance mutable state at runtime — sharing the authored instance is safe.

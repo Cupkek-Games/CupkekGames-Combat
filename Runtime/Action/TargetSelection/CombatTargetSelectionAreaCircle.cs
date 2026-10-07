@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using CupkekGames.ShapeDrawing;
-using CupkekGames.TimeSystem;
 using UnityEngine;
 
 namespace CupkekGames.Combat
@@ -21,11 +18,20 @@ namespace CupkekGames.Combat
     public float Radius;
     public CombatAreaCenter Center = CombatAreaCenter.Caster;
 
+    public override bool HasArea => true;
+
     public override List<CombatUnit> GetTargets(ICombatUnitManager combatUnitManager, CombatUnit caster, CombatUnit primaryTarget, bool debug)
       => GetTargets(combatUnitManager, caster, primaryTarget, null, debug);
 
     public override List<CombatUnit> GetTargets(ICombatUnitManager combatUnitManager, CombatUnit caster,
       CombatUnit primaryTarget, Vector3? impact, bool debug)
+    {
+      TryGetArea(combatUnitManager, caster, primaryTarget, impact, out CombatArea area);
+      return FromArea(combatUnitManager, caster, area);
+    }
+
+    public override bool TryGetArea(ICombatUnitManager combatUnitManager, CombatUnit caster, CombatUnit primaryTarget,
+      Vector3? impact, out CombatArea area)
     {
       Vector3 center;
       if (Center == CombatAreaCenter.Impact)
@@ -38,28 +44,8 @@ namespace CupkekGames.Combat
         center = caster.View.transform.position;
       }
 
-      return FromArea(combatUnitManager, caster, CombatArea.Circle(center, Radius));
-    }
-
-
-    public override Indicator ShowIndicator(
-      ICombatSpace space,
-      IIndicatorPool indicatorPool,
-      Vector3 position,
-      Quaternion rotation,
-      float duration,
-      CancellationToken? ct,
-      TimeBundle timeBundle,
-      Color? color = null)
-    {
-      Indicator indicator = indicatorPool.ShowCircleRegion(position, space.ToWorld(Radius), color);
-
-      if (duration > 0)
-      {
-        indicator.AnimateFill(duration, ct.Value, timeBundle).Forget();
-      }
-
-      return indicator;
+      area = CombatArea.Circle(center, Radius);
+      return true;
     }
   }
 }

@@ -80,6 +80,8 @@ namespace CupkekGames.Combat
             _context?.Dispose();
             _context = new CombatActionContext(_runner.RootFrame);
             bb["Context"] = _context;
+            // A new run aims afresh: the last run's locked area is gone.
+            _context.Area = null;
 
             _firstTargetsCalculated = false;
         }

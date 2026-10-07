@@ -3,7 +3,6 @@ using System.Collections.ObjectModel;
 using UnityEditor;
 using UnityEngine;
 using CupkekGames.RPGStats;
-using CupkekGames.ShapeDrawing;
 using CupkekGames.TimeSystem;
 using CupkekGames.Units;
 
@@ -160,7 +159,6 @@ namespace CupkekGames.Combat.Tests
         public float HoverOutlineFadeInDuration => 0f;
         public float HoverOutlineFadeOutDuration => 0f;
         public int BossBarMinTier => int.MaxValue;
-        public IndicatorSettings IndicatorSettings => null;
         public float WorldSpaceMinDistance => 0f;
         public float WorldSpaceMaxDistance => 0f;
         public float WorldSpaceMinScale => 1f;
@@ -205,6 +203,7 @@ namespace CupkekGames.Combat.Tests
         public bool InRange(CombatUnit caster, CombatUnit target, float range) => Distance(caster, target) <= range;
         public int StepsToReach(CombatUnit caster, CombatUnit target, float range) => Mathf.Max(0, Mathf.CeilToInt(Distance(caster, target) - range));
         public void Collect(in CombatArea area, List<CombatUnit> results) => results.Clear();
+        public CombatAreaMark ShowArea(in CombatArea area, Color color) => throw new System.NotSupportedException("The test world draws nothing.");
         public float ToWorld(float units) => units;
         public ICombatMover CreateMover(CombatUnitView view) => throw new System.NotSupportedException("The test world moves nothing.");
         public System.IDisposable Drive(TimeContext time, System.Action<float> step) => throw new System.NotSupportedException("The test world steps nothing.");

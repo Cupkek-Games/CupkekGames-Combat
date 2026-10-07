@@ -1,11 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
-using System.Threading;
 using System.Text.RegularExpressions;
 using CupkekGames.BehaviourTrees;
 using CupkekGames.Graphs;
-using CupkekGames.ShapeDrawing;
-using CupkekGames.TimeSystem;
 using CupkekGames.RPGStats;
 
 using CupkekGames.VFX;
@@ -39,19 +36,6 @@ namespace CupkekGames.Combat
       bool debug)
     {
       return TargetSelection.GetTargets(combatUnitManager, caster, primaryTarget, debug);
-    }
-
-    public Indicator ShowIndicator(
-      ICombatSpace space,
-      IIndicatorPool indicatorPool,
-      Vector3 position,
-      Quaternion rotation,
-      float duration,
-      CancellationToken? ct,
-      TimeBundle timeBundle,
-      Color? color = null)
-    {
-      return TargetSelection.ShowIndicator(space, indicatorPool, position, rotation, duration, ct, timeBundle, color);
     }
 
     /// <summary>

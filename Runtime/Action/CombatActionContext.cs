@@ -58,6 +58,22 @@ namespace CupkekGames.Combat
         /// </summary>
         public Vector3? ImpactPosition => _frame.TryGet<Vector3>(ImpactPositionKey, out var v) ? v : (Vector3?)null;
 
+        public const string AreaKey = "Area";
+
+        /// <summary>
+        /// The area this run locked when its warning showed: its hits land on the cells
+        /// warned of, however anyone moved since. Null until a warning locks one.
+        /// </summary>
+        public CombatArea? Area
+        {
+            get => _frame.TryGet<CombatArea>(AreaKey, out var v) ? v : (CombatArea?)null;
+            set
+            {
+                if (value.HasValue) _frame.SetLocal(AreaKey, value.Value);
+                else _frame.RemoveLocal(AreaKey);
+            }
+        }
+
         /// <summary>
         /// Reads walk the frame chain so a scoped decorator's local
         /// <c>TargetList</c> is visible to its descendants. Writes go
@@ -77,7 +93,7 @@ namespace CupkekGames.Combat
         static readonly string[] CapturedKeys =
         {
             "CombatActionSO", "CombatSettings", "CombatManager", "Caster", "PrimaryTarget", "SkillLevel",
-            SourceKey, "TargetList", "CancellationToken", "CancellationTokenCasterDeath", "CancellationTokenCasterInterrupt",
+            SourceKey, "TargetList", AreaKey, "CancellationToken", "CancellationTokenCasterDeath", "CancellationTokenCasterInterrupt",
         };
 
         /// <summary>

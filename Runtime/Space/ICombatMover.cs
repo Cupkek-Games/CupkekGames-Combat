@@ -34,10 +34,10 @@ namespace CupkekGames.Combat
         void SetRooted(bool rooted);
 
         /// <summary>
-        /// Pushes the unit by <paramref name="offset"/> combat units (already turned the way
-        /// the unit faces) over <paramref name="duration"/> seconds.
+        /// Dashes the unit by <paramref name="offset"/> combat units (already turned the way
+        /// the unit faces) over <paramref name="duration"/> seconds, as <paramref name="mode"/> says.
         /// </summary>
-        void Dash(Vector3 offset, float duration, Ease ease, int avoidancePriority, CancellationToken cancellationToken);
+        void Dash(Vector3 offset, float duration, Ease ease, CombatDashMode mode, CancellationToken cancellationToken);
 
         /// <summary>Standing still where it belongs: not walking, not pushed. A unit starts an action only when settled.</summary>
         bool IsSettled { get; }

@@ -33,18 +33,18 @@ namespace CupkekGames.Combat
         /// <see cref="CombatActionContext"/>'s bound frame — which means the
         /// scope is whatever frame the caller currently holds (root for
         /// non-scoping callers, the local frame for descendants of a
-        /// <see cref="CombatActionNodeTargetSelection"/>).
+        /// <see cref="CombatActionNodeTargetSelection"/>). A run that locked its
+        /// area (<see cref="CombatActionContext.Area"/>) takes whoever stands in it now.
         /// </summary>
         public static List<CombatUnit> UpdateTargetList(GraphFrame frame)
         {
             var ctx = CombatActionContext.From(frame);
             if (ctx == null) return null;
 
-            var targets = ctx.ActionSO.GetTargets(
-                ctx.CombatManager.UnitManager,
-                ctx.Caster,
-                ctx.PrimaryTarget,
-                false);
+            ICombatUnitManager units = ctx.CombatManager.UnitManager;
+            var targets = ctx.Area is CombatArea area
+                ? ctx.ActionSO.TargetSelection.GetTargets(units, ctx.Caster, area)
+                : ctx.ActionSO.GetTargets(units, ctx.Caster, ctx.PrimaryTarget, false);
             ctx.TargetList = targets;
             return targets;
         }

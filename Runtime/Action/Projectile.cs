@@ -1,5 +1,4 @@
 using UnityEngine;
-using PrimeTween;
 using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
@@ -29,12 +28,11 @@ namespace CupkekGames.Combat
     [SerializeField] private Vector3 _offset = Vector3.zero;
     [SerializeField] private Quaternion _rotation = Quaternion.identity;
     [SerializeField] private Vector3 _scale = Vector3.one;
-    [Header("Collision")][SerializeField] private bool _withCollision = false;
-    [SerializeField] private bool _destroyOnCollision = false;
-    [SerializeField] private float _collisionRadius = 0.5f;
-    [SerializeField] private Vector3 _tweenPosition = Vector3.zero;
-    [SerializeField] private float _tweenDuration = 0.5f;
-    [SerializeField] private Ease _tweenEase = Ease.OutSine;
+    [Header("Pierce")]
+    [Tooltip("Flies the run's locked line (its warning's area) to the far end and hits each target on it as it passes, instead of homing on one.")]
+    [SerializeField] private bool _pierce = false;
+    [Tooltip("Seconds a pierce takes to fly a long line (shorter lines fly faster, as homing shots do).")]
+    [SerializeField] private float _pierceSeconds = 0.5f;
 
     [Header("VFX")][SerializeField] private VFXBundle _hitPrefab;
     [SerializeField] private VFXBundle _flashPrefab;
@@ -82,8 +80,8 @@ namespace CupkekGames.Combat
     /// A homing projectile follows its target while it stands and, if the target falls
     /// mid-flight, flies on to where it last was and lands there: the payload still runs,
     /// with <see cref="CombatActionContext.ImpactPosition"/> set, so an area payload hits
-    /// around the landing point and a dead target simply takes nothing. A collision
-    /// projectile runs the payload on each unit it touches.
+    /// around the landing point and a dead target simply takes nothing. A pierce flies the
+    /// run's locked line and runs the payload on each of the run's targets as it passes them.
     /// </summary>
     public async UniTask PlayProjectile(
       CombatUnit caster,
@@ -100,7 +98,7 @@ namespace CupkekGames.Combat
       }
 
       // Nothing to aim a homing shot at: the target fell before it left the hand.
-      if (!_withCollision && !target.IsAlive)
+      if (!_pierce && !target.IsAlive)
       {
         return;
       }
@@ -113,11 +111,14 @@ namespace CupkekGames.Combat
       spawnTransform.GetPositionAndRotation(out Vector3 startPosition, out Quaternion startRotation);
 
       Vector3 targetPosition;
-      if (_withCollision)
+      Vector3 way = Vector3.zero;
+      if (_pierce)
       {
-        Vector3 worldSpaceDisplacement = startRotation * _tweenPosition;
-
-        targetPosition = startPosition + worldSpaceDisplacement;
+        CombatArea area = launch.Area ?? throw new InvalidOperationException(
+          "[Projectile] a pierce flies its run's locked line: put it under a warning (CombatActionNodeShowIndicator) on a line selection.");
+        // To the far edge of the line's last cell.
+        way = area.Forward;
+        targetPosition = startPosition + way * launch.CombatManager.UnitManager.Space.ToWorld(area.Length + 0.5f);
       }
       else if (target != null && target.View != null)
       {
@@ -146,13 +147,6 @@ namespace CupkekGames.Combat
       projectile.transform.localScale = _scale;
       TransformUtils.SetScaleRecursive(projectile.transform, _scale);
 
-      if (_withCollision)
-      {
-        ProjectileCollisionHandler collisionHandler = projectile.GetComponent<ProjectileCollisionHandler>();
-        collisionHandler.Setup(caster, (_, hit) => OnProjectileCollision(launch, child, projectile, hit),
-          _destroyOnCollision, _collisionRadius);
-      }
-
       renderFeatureManager.UnDarkenAsync(projectile, true).Forget();
 
       projectile.SetActive(true);
@@ -162,16 +156,11 @@ namespace CupkekGames.Combat
 
       bool isCanceled;
       Vector3 landing = targetPosition;
-      if (_withCollision)
+      if (_pierce)
       {
-        float projectileDuration = _tweenDuration * durationMul;
-        if (projectileDuration <= 0)
-        {
-          projectileDuration = 0.1f;
-        }
-
+        float projectileDuration = Mathf.Max(0.1f, _pierceSeconds * durationMul);
         isCanceled =
-          await TweenProjectile(projectile, targetPosition, projectileDuration, _tweenEase, globalCancelToken,
+          await Pierce(launch, child, projectile, spawnPos, targetPosition, way, projectileDuration, globalCancelToken,
             timeBundle).SuppressCancellationThrow();
       }
       else
@@ -205,7 +194,7 @@ namespace CupkekGames.Combat
           caster.TimeBundle, renderFeatureManager).Forget();
       }
 
-      if (!_withCollision)
+      if (!_pierce)
       {
         launch.Frame.SetLocal(CombatActionContext.ImpactPositionKey, landing);
         child.UpdateNode(launch.Frame, 0);
@@ -213,25 +202,52 @@ namespace CupkekGames.Combat
     }
 
     /// <summary>
-    /// Tween projectile to a fixed location
-    /// Can be canceled with token
-    /// Fails if target cant be reached
+    /// A pierce's flight at an even speed along its line: each of the run's targets takes
+    /// the payload, on a branch of its own, as the shot passes it (one that fell meanwhile
+    /// takes nothing).
     /// </summary>
-    private async UniTask TweenProjectile(
+    private async UniTask Pierce(
+      CombatActionContext launch,
+      BTNode child,
       GameObject projectile,
-      Vector3 targetPosition,
+      Vector3 from,
+      Vector3 to,
+      Vector3 way,
       float projectileDuration,
-      Ease ease,
       CancellationToken ct,
       TimeBundle timeBundle)
     {
-      Tween tween = Tween.Position(projectile.transform, targetPosition, projectileDuration, ease);
+      List<CombatUnit> ahead = new List<CombatUnit>(launch.TargetList ?? new List<CombatUnit>());
+      ahead.Sort((a, b) => Along(a, from, way).CompareTo(Along(b, from, way)));
+      float length = Vector3.Distance(from, to);
 
-      timeBundle.TimeScaleTween.Add(tween);
+      float elapsedTime = 0f;
+      int next = 0;
+      while (true)
+      {
+        float t = Mathf.Clamp01(elapsedTime / projectileDuration);
+        projectile.transform.position = Vector3.Lerp(from, to, t);
 
-      await tween.ToYieldInstruction().ToUniTask(cancellationToken: ct);
+        while (next < ahead.Count && Along(ahead[next], from, way) <= t * length)
+        {
+          HitAsItPasses(launch, child, projectile, ahead[next++]);
+        }
+
+        if (t >= 1f) break;
+
+        elapsedTime += timeBundle?.TimeContext.DeltaTime ?? Time.deltaTime;
+        await UniTask.Yield(cancellationToken: ct);
+      }
     }
 
+    // How far along the shot's way a unit stands.
+    private static float Along(CombatUnit unit, Vector3 from, Vector3 way)
+    {
+      if (unit?.View == null) return 0f;
+      Vector3 offset = unit.View.transform.position - from;
+      offset.y = 0f;
+      return Vector3.Dot(offset, way);
+    }
 
     /// <summary>
     /// Homing flight: follows the target while it stands; once it falls (or its view
@@ -264,9 +280,11 @@ namespace CupkekGames.Combat
       return targetPosition;
     }
 
-    // Each unit the shot touches is its payload's one target, on a branch of its own.
-    private void OnProjectileCollision(CombatActionContext launch, BTNode child, GameObject projectile, CombatUnit targetUnit)
+    // Each unit the shot passes is its payload's one target, on a branch of its own.
+    private static void HitAsItPasses(CombatActionContext launch, BTNode child, GameObject projectile, CombatUnit targetUnit)
     {
+      if (targetUnit == null || !targetUnit.IsAlive) return;
+
       CombatActionContext hit = launch.Branch();
       hit.TargetList = new List<CombatUnit> { targetUnit };
       hit.Frame.SetLocal(CombatActionContext.ImpactPositionKey, projectile.transform.position);
