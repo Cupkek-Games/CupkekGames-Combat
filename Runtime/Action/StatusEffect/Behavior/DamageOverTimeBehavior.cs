@@ -31,7 +31,7 @@ namespace CupkekGames.Combat
 
             wearer.Health.TakeDamage(new CombatHit(effect.Applier, effect.Source, damage));
 
-            manager.PopupManager.Show(_popupKind, targetPos, damage, CombatDamageCalculator.PopupContext(combatSettings, wearer));
+            manager.PopupManager.Show(_popupKind, targetPos, damage, CombatDamageCalculator.PopupContext(combatSettings, wearer, null));
         }
 
         public void OnEnd(ICombatSettings combatSettings, ICombatManager manager, StatusEffect effect, CombatUnit wearer) { }

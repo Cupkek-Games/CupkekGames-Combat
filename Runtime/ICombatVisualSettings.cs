@@ -1,4 +1,5 @@
 using UnityEngine;
+using CupkekGames.RPGStats;
 
 namespace CupkekGames.Combat
 {
@@ -12,8 +13,8 @@ namespace CupkekGames.Combat
         float HitSquashAndStretchBumpAmount { get; }
         float CritCameraShakeIntensity { get; }
 
-        /// <summary>A killing blow's popup reads as an overkill when its damage is at least this many times what the target had left.</summary>
-        float OverkillShare { get; }
+        /// <summary>A hit's popup colour for its <paramref name="element"/> (null: a hit with no element). Colour says the element and nothing else.</summary>
+        Color ElementColor(ElementTypeDefinitionSO element);
 
         // Outline
         float HoverOutlineWidth { get; }
