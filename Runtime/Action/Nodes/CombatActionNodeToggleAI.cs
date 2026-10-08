@@ -2,7 +2,6 @@ using System;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
-using CupkekGames.Luna;
 using CupkekGames.BehaviourTrees;
 using CupkekGames.Graphs;
 

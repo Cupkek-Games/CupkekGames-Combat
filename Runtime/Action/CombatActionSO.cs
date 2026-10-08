@@ -5,7 +5,6 @@ using CupkekGames.BehaviourTrees;
 using CupkekGames.Graphs;
 using CupkekGames.RPGStats;
 
-using CupkekGames.VFX;
 
 namespace CupkekGames.Combat
 {

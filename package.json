@@ -1,7 +1,7 @@
 {
   "name": "com.cupkekgames.combat",
   "displayName": "CupkekGames Combat",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "author": {
     "name": "CupkekGames",
     "url": "https://www.docs.cupkek.games"
@@ -17,6 +17,24 @@
     "CupkekGames"
   ],
   "dependencies": {
-    "com.cupkekgames.graphs": "0.5.1"
+    "com.cupkekgames.animations": "0.2.0",
+    "com.cupkekgames.audio": "0.2.0",
+    "com.cupkekgames.behaviourtrees": "0.3.1",
+    "com.cupkekgames.cameras": "0.3.2",
+    "com.cupkekgames.character": "0.4.1",
+    "com.cupkekgames.data": "0.4.1",
+    "com.cupkekgames.fadeables": "0.2.2",
+    "com.cupkekgames.graphs": "0.5.1",
+    "com.cupkekgames.inventory": "0.4.6",
+    "com.cupkekgames.keyvaluedatabases": "0.3.0",
+    "com.cupkekgames.luna": "2.0.0",
+    "com.cupkekgames.pool": "0.1.2",
+    "com.cupkekgames.rpgstats": "0.3.2",
+    "com.cupkekgames.services": "0.2.1",
+    "com.cupkekgames.textpopup": "0.4.0",
+    "com.cupkekgames.timesystem": "0.4.1",
+    "com.cupkekgames.transforms": "0.1.0",
+    "com.cupkekgames.units": "0.4.2",
+    "com.cupkekgames.vfx": "0.5.0"
   }
 }

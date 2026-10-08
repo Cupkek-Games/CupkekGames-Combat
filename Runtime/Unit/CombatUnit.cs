@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
-using CupkekGames.InventorySystem;
 using CupkekGames.TimeSystem;
 using CupkekGames.RPGStats;
 using CupkekGames.Units;

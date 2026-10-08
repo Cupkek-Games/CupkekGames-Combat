@@ -4,9 +4,7 @@ using Cysharp.Threading.Tasks;
 using System.Threading;
 using CupkekGames.BehaviourTrees;
 using CupkekGames.Graphs;
-using CupkekGames.Services;
 
-using CupkekGames.VFX;
 
 namespace CupkekGames.Combat
 {
