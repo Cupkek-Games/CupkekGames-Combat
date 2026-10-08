@@ -54,7 +54,7 @@ namespace CupkekGames.Combat
 
       AttributeEffect attributeEffect = GetAttributeDataEffect(ctx.SkillLevel);
       float duration = GetDuration(ctx.SkillLevel);
-      CombatAttributeDataEffectRuntime attributeEffectRuntime = GetCombatAttributeDataEffectRuntime(
+      GiveEach(GetTargetList(ctx.Caster, ctx.TargetList), () => GetCombatAttributeDataEffectRuntime(
         ctx.ActionSO.Icon,
         ctx.ActionSO.Name,
         ctx.ActionSO.Description,
@@ -63,14 +63,21 @@ namespace CupkekGames.Combat
         duration,
         _show,
         ctx.CombatSettings.AttributeDisplayConfig
-      );
-
-      foreach (CombatUnit target in GetTargetList(ctx.Caster, ctx.TargetList))
-      {
-        target.Buffs.Add(attributeEffectRuntime);
-      }
+      ));
 
       return BTNodeRuntimeState.Success;
+    }
+
+    /// <summary>
+    /// Each target gets a buff of its own from <paramref name="make"/>: one shared instance
+    /// would carry a single countdown, so every target's buff would end with the last one's.
+    /// </summary>
+    public static void GiveEach(IEnumerable<CombatUnit> targets, Func<CombatAttributeDataEffectRuntime> make)
+    {
+      foreach (CombatUnit target in targets)
+      {
+        target.Buffs.Add(make());
+      }
     }
 
     private AttributeEffect GetAttributeDataEffect(int skillLevel)

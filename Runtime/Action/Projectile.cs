@@ -177,8 +177,21 @@ namespace CupkekGames.Combat
       if (!_pierce)
       {
         launch.Frame.SetLocal(CombatActionContext.ImpactPositionKey, landing);
-        child.UpdateNode(launch.Frame, 0);
+        RunPayload(child, launch.Frame);
       }
+    }
+
+    /// <summary>
+    /// Runs a payload once, where the shot lands, with no time: a node that needs more (a delay,
+    /// a wind-up, a sequence of several steps) would never finish, and the hit would be lost.
+    /// That is an authoring error, and it says so.
+    /// </summary>
+    public static void RunPayload(BTNode payload, GraphFrame frame)
+    {
+      if (payload.UpdateNode(frame, 0) != BTNodeRuntimeState.Running) return;
+
+      Debug.LogError($"[Projectile] the payload '{payload.name}' ({payload.GetType().Name}) is still running after the shot landed. " +
+                     "A payload runs once, so it must finish at once: no delay, wind-up or sequence of several steps (a Parallel node runs its children together).");
     }
 
     /// <summary>
@@ -269,7 +282,7 @@ namespace CupkekGames.Combat
       hit.TargetList = new List<CombatUnit> { targetUnit };
       hit.Frame.SetLocal(CombatActionContext.ImpactPositionKey, projectile.transform.position);
 
-      child.UpdateNode(hit.Frame, 0);
+      RunPayload(child, hit.Frame);
     }
   }
 }

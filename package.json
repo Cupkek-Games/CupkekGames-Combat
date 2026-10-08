@@ -1,7 +1,7 @@
 {
   "name": "com.cupkekgames.combat",
   "displayName": "CupkekGames Combat",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "author": {
     "name": "CupkekGames",
     "url": "https://www.docs.cupkek.games"
@@ -32,7 +32,7 @@
     "com.cupkekgames.rpgstats": "0.3.2",
     "com.cupkekgames.services": "0.2.1",
     "com.cupkekgames.textpopup": "0.4.0",
-    "com.cupkekgames.timesystem": "0.4.1",
+    "com.cupkekgames.timesystem": "0.4.2",
     "com.cupkekgames.transforms": "0.1.0",
     "com.cupkekgames.units": "0.4.2",
     "com.cupkekgames.vfx": "0.5.0"

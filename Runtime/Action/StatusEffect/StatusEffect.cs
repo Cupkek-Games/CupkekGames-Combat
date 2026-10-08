@@ -88,7 +88,9 @@ namespace CupkekGames.Combat
         Key = definition != null ? definition.name : null,
       };
       StartDuration = duration;
-      _countdown = new CountdownTimeContext(TimeManager.Instance.Global, StartDuration, 0, INTERVAL_VISUAL, skillCancelToken);
+      // Holds the duration until the loop starts on its wearer's time: never started, so it
+      // needs no clock of the game's.
+      _countdown = new CountdownTimeContext(TimeContext.Unclocked, StartDuration, 0, INTERVAL_VISUAL, skillCancelToken);
       Level = level;
       _skillCancelToken = skillCancelToken;
       _applier = applier;

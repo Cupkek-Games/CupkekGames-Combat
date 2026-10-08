@@ -62,7 +62,9 @@ namespace CupkekGames.Combat
 
       Data = data;
       StartDuration = duration;
-      _countdown = new CountdownTimeContext(TimeManager.Instance.Global, StartDuration, 0, StatusEffect.INTERVAL_VISUAL, CancellationToken.None);
+      // Holds the duration until the cooldown starts on its unit's time: never started, so it
+      // needs no clock of the game's (a buff can be built before any TimeManager runs).
+      _countdown = new CountdownTimeContext(TimeContext.Unclocked, StartDuration, 0, StatusEffect.INTERVAL_VISUAL, CancellationToken.None);
       Level = level;
       Icon = icon;
       Name = name;
