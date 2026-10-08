@@ -42,6 +42,35 @@ namespace CupkekGames.Combat.Tests
         }
 
         [Test]
+        public void AUnitsStatuses_EndQuietly_WhenItsAIIsKilled()
+        {
+            // A fight's end kills every unit's AI. A stun still on a hero ended on the cancelled
+            // token and restarted the AI of a unit whose fight was over (the fight simulator).
+            CombatUnit saeko = _world.Unit("Saeko");
+            CombatUnit carmen = _world.Unit("Carmen");
+            saeko.SetupAI();
+            carmen.SetupAI();
+            StatusEffectSO stun = _world.Own(ScriptableObject.CreateInstance<StatusEffectSO>());
+            stun.name = "Stun";
+
+            var hers = new StatusEffect(stun, 5f, 1, saeko.DeathToken.Token);
+            var control = new StatusEffect(stun, 0.2f, 1, carmen.DeathToken.Token);
+            int ended = 0, controlEnded = 0;
+            hers.OnEnd += _ => ended++;
+            control.OnEnd += _ => controlEnded++;
+            saeko.StatusEffects.Add(null, hers);
+            carmen.StatusEffects.Add(null, control);
+
+            saeko.KillAI();
+            saeko.TimeBundle.TimeContext.Update(0.1f);
+            carmen.TimeBundle.TimeContext.Update(0.5f);
+
+            Assert.AreEqual(0, ended, "killed with its unit: its end never runs");
+            CollectionAssert.IsEmpty(saeko.StatusEffects.All);
+            Assert.AreEqual(1, controlEnded, "a status that runs out still ends");
+        }
+
+        [Test]
         public void APayloadThatFinishesAtOnce_RunsQuietly()
         {
             var payload = ScriptableObject.CreateInstance<FinishingNode>();

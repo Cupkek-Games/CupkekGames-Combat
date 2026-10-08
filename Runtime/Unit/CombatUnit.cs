@@ -254,7 +254,6 @@ namespace CupkekGames.Combat
         public void Dispose()
         {
             _unit.Dispose();
-            StatusEffects?.DisposeAll();
             Buffs?.DisposeAll();
             KillAI();
         }
@@ -280,8 +279,14 @@ namespace CupkekGames.Combat
             _interruptToken = new();
         }
 
+        /// <summary>
+        /// Ends the unit's fight life: its statuses end quietly, then its tokens go. A status
+        /// left running would end on the cancelled token and act on a unit that is gone (a
+        /// stun's end restarted the AI of a hero whose fight was over).
+        /// </summary>
         public void KillAI()
         {
+            StatusEffects?.DisposeAll();
             _interruptToken?.Cancel();
             _interruptToken?.Dispose();
             _interruptToken = null;
