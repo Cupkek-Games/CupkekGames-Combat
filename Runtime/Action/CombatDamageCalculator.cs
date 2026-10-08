@@ -107,7 +107,6 @@ namespace CupkekGames.Combat
                 Damage = damage,
                 IsCrit = isCrit,
                 ElementMultiplier = elementMultiplier,
-                Element = attacker.GetAttackElement(),
                 Source = source,
             };
         }
@@ -132,7 +131,6 @@ namespace CupkekGames.Combat
                 Damage = (int)(amount * elementMultiplier + 0.5f),
                 IsCrit = false,
                 ElementMultiplier = elementMultiplier,
-                Element = attacker?.GetAttackElement(),
                 Source = source,
             };
         }
@@ -177,7 +175,7 @@ namespace CupkekGames.Combat
                 PopupKinds.DamageVariant(result.ElementMultiplier),
                 targetPos,
                 result.Damage,
-                PopupContext(visualSettings, target, result.Element));
+                PopupContext(target));
 
             view.ShaderColorController
               .AddColor(visualSettings.HitColor, visualSettings.HitColorWeight, visualSettings.HitColorDurationMS).Forget();
@@ -189,22 +187,14 @@ namespace CupkekGames.Combat
             if (result.IsCrit)
             {
                 manager.EventDatabase.InvokeOnCriticalHitEvent(attacker, target, result.Damage);
-                manager.PlayCriticalEffect(view.transform);
+                manager.PlayCriticalEffect(attacker, view.transform);
             }
         }
 
-        /// <summary>
-        /// The popup for <paramref name="target"/>'s last hit: a crit or not, in the colour of
-        /// the hit's <paramref name="element"/> (the settings' neutral colour without one).
-        /// Colour says the element and nothing else.
-        /// </summary>
-        public static DamagePopupContext PopupContext(ICombatVisualSettings visualSettings, CombatUnit target, ElementTypeDefinitionSO element)
+        /// <summary>The popup for <paramref name="target"/>'s last hit: whether it was a crit.</summary>
+        public static DamagePopupContext PopupContext(CombatUnit target)
         {
-            return new DamagePopupContext
-            {
-                IsCrit = target.LastHit.HasValue && target.LastHit.Value.IsCrit,
-                Color = visualSettings.ElementColor(element),
-            };
+            return new DamagePopupContext { IsCrit = target.LastHit.HasValue && target.LastHit.Value.IsCrit };
         }
     }
 
@@ -216,8 +206,6 @@ namespace CupkekGames.Combat
         public int Damage;
         public bool IsCrit;
         public float ElementMultiplier;
-        /// <summary>The attacker's element the damage was dealt in; null when it has none.</summary>
-        public ElementTypeDefinitionSO Element;
         /// <summary>Where the damage comes from: the hit names it.</summary>
         public CombatSource Source;
     }

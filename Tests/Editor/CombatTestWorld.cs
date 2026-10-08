@@ -155,7 +155,6 @@ namespace CupkekGames.Combat.Tests
         public int HitColorDurationMS => 0;
         public float HitSquashAndStretchBumpAmount => 0f;
         public float CritCameraShakeIntensity => 0f;
-        public Color ElementColor(ElementTypeDefinitionSO element) => Color.white;
         public float HoverOutlineWidth => 0f;
         public float HoverOutlineFadeInDuration => 0f;
         public float HoverOutlineFadeOutDuration => 0f;

@@ -1,5 +1,4 @@
 using UnityEngine;
-using CupkekGames.RPGStats;
 
 namespace CupkekGames.Combat
 {
@@ -12,9 +11,6 @@ namespace CupkekGames.Combat
         int HitColorDurationMS { get; }
         float HitSquashAndStretchBumpAmount { get; }
         float CritCameraShakeIntensity { get; }
-
-        /// <summary>A hit's popup colour for its <paramref name="element"/> (null: a hit with no element). Colour says the element and nothing else.</summary>
-        Color ElementColor(ElementTypeDefinitionSO element);
 
         // Outline
         float HoverOutlineWidth { get; }

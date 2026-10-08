@@ -16,6 +16,7 @@ namespace CupkekGames.Combat
 
         /// <summary>The fight's random numbers (crits, action ties), seeded per fight.</summary>
         CombatRandom Random { get; }
-        void PlayCriticalEffect(Transform target);
+        /// <summary>A crit by <paramref name="attacker"/> (null for none) landed on <paramref name="target"/>: the game's crit feedback, if any.</summary>
+        void PlayCriticalEffect(CombatUnit attacker, Transform target);
     }
 }
