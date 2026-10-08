@@ -67,9 +67,6 @@ namespace CupkekGames.Combat
         _passed = deltaTime;
         _mark = units.Space.ShowArea(area, _indicatorColor);
         _mark.Fill(_durationFill, caster.TimeBundle, _cancellationToken.Value);
-
-        RenderFeatureManager renderFeatureManager = ServiceLocator.Get<RenderFeatureManager>();
-        renderFeatureManager.UnDarkenAsync(_mark.gameObject, true).Forget();
       }
       else
       {

@@ -169,14 +169,5 @@ namespace CupkekGames.Combat
       return clone;
     }
 
-    public virtual UniTask PlayVFX(GameObject parent, Vector3 position, Quaternion rotation, CancellationToken? ct, TimeBundle timeBundle, RenderFeatureManager renderFeatureManager)
-    {
-      if (Definition.VFXBundle != null)
-      {
-        return Definition.VFXBundle.Play(parent, position, rotation, ct, timeBundle, renderFeatureManager, true);
-      }
-
-      return UniTask.CompletedTask;
-    }
   }
 }

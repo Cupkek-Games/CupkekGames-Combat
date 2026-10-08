@@ -12,7 +12,7 @@ namespace CupkekGames.Combat
         private ICombatSettings _combatSettings;
         private TimeManager _timeManager;
         private ICombatUnitManager _combatUnitManager;
-        private RenderFeatureManager _renderFeatureManager;
+        private SceneSpotlight _spotlight;
         private Queue<CombatUnit> _combatUnits = new();
         private bool _effectsActive = false;
 
@@ -25,12 +25,12 @@ namespace CupkekGames.Combat
         public bool HasNext => _combatUnits.Count > 0;
 
         public CombatUltimateManager(ICombatSettings combatSettings, TimeManager timeManager,
-            ICombatUnitManager combatUnitManager, RenderFeatureManager renderFeatureManager)
+            ICombatUnitManager combatUnitManager, SceneSpotlight spotlight)
         {
             _combatSettings = combatSettings;
             _timeManager = timeManager;
             _combatUnitManager = combatUnitManager;
-            _renderFeatureManager = renderFeatureManager;
+            _spotlight = spotlight;
         }
 
         public void Enqueue(CombatUnit combatUnit)
@@ -86,7 +86,7 @@ namespace CupkekGames.Combat
                 _timeManager.Global.TimeScale = 1f;
                 _combatUnitManager.SetTimeScale(1f, null);
 
-                _renderFeatureManager?.UnDarkenEverythingAsync(true);
+                _spotlight?.ClearSpotlight();
             }
         }
 
@@ -98,9 +98,13 @@ namespace CupkekGames.Combat
             _timeManager.Global.TimeScale = 0f;
             _combatUnitManager.SetTimeScale(0f, combatUnit);
 
-            if (combatUnit.View != null)
+            // Everything darkens but the caster and the effects. A caster next in the queue takes
+            // the spotlight over from the last one; its renderers are read now (an accessory
+            // switched on since its body woke counts).
+            if (combatUnit.View != null && _spotlight != null)
             {
-                _renderFeatureManager?.DarkenEverythingExceptAsync(combatUnit.View.Renderers, true);
+                combatUnit.View.RefreshRendererCache();
+                _spotlight.Spotlight(combatUnit.View.Renderers);
             }
         }
 

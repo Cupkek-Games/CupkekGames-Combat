@@ -12,6 +12,9 @@ namespace CupkekGames.Combat
         float HitSquashAndStretchBumpAmount { get; }
         float CritCameraShakeIntensity { get; }
 
+        /// <summary>A killing blow's popup reads as an overkill when its damage is at least this many times what the target had left.</summary>
+        float OverkillShare { get; }
+
         // Outline
         float HoverOutlineWidth { get; }
         float HoverOutlineFadeInDuration { get; }

@@ -14,6 +14,8 @@ namespace CupkekGames.Combat
     {
         [SerializeField] private float _damagePercentagePerSkillLevel = 0.05f;
         [SerializeField] private SFXPlayerSO _sfxPlayer;
+        [Tooltip("The popup kind its ticks show as (a bleed's, a poison's).")]
+        [SerializeField] private string _popupKind = PopupKinds.Damage;
 
         public void OnStart(ICombatSettings combatSettings, ICombatManager manager, StatusEffect effect, CombatUnit wearer) { }
 
@@ -29,7 +31,7 @@ namespace CupkekGames.Combat
 
             wearer.Health.TakeDamage(new CombatHit(effect.Applier, effect.Source, damage));
 
-            manager.PopupManager.Show(PopupKinds.Damage, targetPos, damage);
+            manager.PopupManager.Show(_popupKind, targetPos, damage, CombatDamageCalculator.PopupContext(combatSettings, wearer));
         }
 
         public void OnEnd(ICombatSettings combatSettings, ICombatManager manager, StatusEffect effect, CombatUnit wearer) { }

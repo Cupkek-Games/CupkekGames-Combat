@@ -24,12 +24,15 @@ namespace CupkekGames.Combat
         /// <summary>Takes the warning down at once.</summary>
         public abstract void Hide();
 
-        /// <summary>Takes this warning down after <paramref name="seconds"/> of <paramref name="time"/>.</summary>
+        /// <summary>
+        /// Takes this warning down after <paramref name="seconds"/> of <paramref name="time"/>;
+        /// nothing when the mark is gone by then (the fight torn down with it).
+        /// </summary>
         public async UniTask HideAfter(float seconds, TimeBundle time)
         {
             int showing = Showing;
-            if (seconds > 0f) await time.TimeContext.DelayAsync(seconds);
-            if (showing == Showing) Hide();
+            if (seconds > 0f && await time.TimeContext.DelayAsync(seconds, destroyCancellationToken).SuppressCancellationThrow()) return;
+            if (this != null && showing == Showing) Hide();
         }
     }
 }

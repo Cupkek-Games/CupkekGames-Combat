@@ -175,7 +175,7 @@ namespace CupkekGames.Combat
                 PopupKinds.DamageVariant(result.ElementMultiplier),
                 targetPos,
                 result.Damage,
-                new DamagePopupContext { IsCrit = result.IsCrit });
+                PopupContext(visualSettings, target));
 
             view.ShaderColorController
               .AddColor(visualSettings.HitColor, visualSettings.HitColorWeight, visualSettings.HitColorDurationMS).Forget();
@@ -189,6 +189,19 @@ namespace CupkekGames.Combat
                 manager.EventDatabase.InvokeOnCriticalHitEvent(attacker, target, result.Damage);
                 manager.PlayCriticalEffect(view.transform);
             }
+        }
+
+        /// <summary>How <paramref name="target"/>'s last hit landed, for its popup: a crit, a kill, an overkill.</summary>
+        public static DamagePopupContext PopupContext(ICombatVisualSettings visualSettings, CombatUnit target)
+        {
+            if (!target.LastHit.HasValue) return new DamagePopupContext();
+            CombatHit hit = target.LastHit.Value;
+            return new DamagePopupContext
+            {
+                IsCrit = hit.IsCrit,
+                IsKill = hit.Killed,
+                IsOverkill = hit.IsOverkill(visualSettings.OverkillShare),
+            };
         }
     }
 

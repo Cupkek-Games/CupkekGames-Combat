@@ -46,25 +46,13 @@ namespace CupkekGames.Combat
       _flashPrefab?.Prewarm(parent);
 
       _projectilePool.OnCreateEvent += OnCreateEvent;
-      _projectilePool.OnDestroyObjectEvent += OnDestroyEvent;
       _projectilePool.Prewarm();
     }
 
+    // A projectile is an effect: it stays lit under an ultimate's dim.
     private void OnCreateEvent(GameObject gameObject)
     {
-      RenderFeatureManager manager = ServiceLocator.Get<RenderFeatureManager>(true);
-      manager?.Register(gameObject, true);
-    }
-
-    private void OnDestroyEvent(GameObject gameObject)
-    {
-      RenderFeatureManager manager = ServiceLocator.Get<RenderFeatureManager>(true);
-      if (manager == null)
-      {
-        return;
-      }
-
-      manager.Unregister(gameObject, true);
+      ServiceLocator.Get<SceneSpotlight>().MarkEffect(gameObject);
     }
 
     public void Dispose()
@@ -89,8 +77,7 @@ namespace CupkekGames.Combat
       GraphFrame frame,
       BTNode child,
       CancellationToken globalCancelToken,
-      TimeBundle timeBundle,
-      RenderFeatureManager renderFeatureManager)
+      TimeBundle timeBundle)
     {
       if (_projectilePool == null)
       {
@@ -138,7 +125,7 @@ namespace CupkekGames.Combat
       if (_flashPrefab != null)
       {
         _flashPrefab?.Play(caster.View.gameObject, spawnPos, spawnRot, globalCancelToken,
-          caster.TimeBundle, renderFeatureManager).Forget();
+          caster.TimeBundle).Forget();
       }
 
       // Play projectile
@@ -146,8 +133,6 @@ namespace CupkekGames.Combat
       projectile.transform.SetPositionAndRotation(spawnPos, spawnRot);
       projectile.transform.localScale = _scale;
       TransformUtils.SetScaleRecursive(projectile.transform, _scale);
-
-      renderFeatureManager.UnDarkenAsync(projectile, true).Forget();
 
       projectile.SetActive(true);
 
@@ -191,7 +176,7 @@ namespace CupkekGames.Combat
       if (_hitPrefab != null && caster.View != null && caster.View.gameObject != null)
       {
         _hitPrefab.Play(caster.View.gameObject, projectile.transform, globalCancelToken,
-          caster.TimeBundle, renderFeatureManager).Forget();
+          caster.TimeBundle).Forget();
       }
 
       if (!_pierce)

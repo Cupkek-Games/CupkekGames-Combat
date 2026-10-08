@@ -54,5 +54,8 @@ namespace CupkekGames.Combat
 
         /// <summary>This hit as it landed.</summary>
         internal CombatHit Landed(int dealt, bool killed) => new CombatHit(this, dealt, killed);
+
+        /// <summary>The hit felled its target with at least <paramref name="share"/> times what it had left.</summary>
+        public bool IsOverkill(float share) => Killed && Damage >= share * Math.Max(1, Dealt);
     }
 }

@@ -32,8 +32,6 @@ namespace CupkekGames.Combat
       var ctx = CombatActionContext.From(frame);
       if (ctx.IsCancelled) return BTNodeRuntimeState.Fail;
 
-      RenderFeatureManager renderFeatureManager = ServiceLocator.Get<RenderFeatureManager>();
-
       foreach (CombatUnit target in GetTargetList(ctx.Caster, ctx.TargetList))
       {
         GameObject go = target.View.Center.gameObject;
@@ -42,7 +40,7 @@ namespace CupkekGames.Combat
         // NOTE: VFXBundle is using caster.TimeBundle for now as it is default and most desired behavior
         // If there is a need to use target.TimeBundle, we can add a parameter
 
-        _vfxBundle.Play(go, go.transform.position, go.transform.rotation, ctx.CombatCancelToken, ctx.Caster.TimeBundle, renderFeatureManager)
+        _vfxBundle.Play(go, go.transform.position, go.transform.rotation, ctx.CombatCancelToken, ctx.Caster.TimeBundle)
           .Forget();
       }
 

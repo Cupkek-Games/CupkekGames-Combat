@@ -42,14 +42,12 @@ namespace CupkekGames.Combat
 
       CombatUnit target = ctx.TargetList[0];
 
-      RenderFeatureManager renderFeatureManager = ServiceLocator.Get<RenderFeatureManager>();
-
       if (target == null || target.DeathToken == null || target.View == null)
       {
         return BTNodeRuntimeState.Fail;
       }
 
-      _projectile.PlayProjectile(ctx.Caster, target, frame, GetChild(), ctx.CombatCancelToken, ctx.Caster.TimeBundle, renderFeatureManager).Forget();
+      _projectile.PlayProjectile(ctx.Caster, target, frame, GetChild(), ctx.CombatCancelToken, ctx.Caster.TimeBundle).Forget();
 
       return BTNodeRuntimeState.Success;
     }

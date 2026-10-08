@@ -43,7 +43,6 @@ namespace CupkekGames.Combat
     private Collider _collider;
 
     // References
-    private RenderFeatureManager _renderFeatureManager;
     private EventDatabaseCombat _eventDatabaseCombat;
     private CombatUnit _combatUnit = null;
 
@@ -81,18 +80,10 @@ namespace CupkekGames.Combat
       {
         _collider.enabled = false;
       }
-
-      _renderFeatureManager = ServiceLocator.Get<RenderFeatureManager>();
-    }
-
-    public virtual void OnEnable()
-    {
-      _renderFeatureManager?.Register(Renderers);
     }
 
     public virtual void OnDisable()
     {
-      _renderFeatureManager?.Unregister(Renderers);
       // A hit's squash still running on a body that leaves (despawned, or the fight torn down).
       if (_animationController != null) SquashAndStretch.Stop(_animationController.Transform);
 
