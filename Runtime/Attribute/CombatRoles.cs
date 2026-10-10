@@ -26,5 +26,11 @@ namespace CupkekGames.Combat
         public const string CritChance = "CritChance";
         /// <summary>Critical-hit damage multiplier. Optional.</summary>
         public const string CritDmg = "CritDmg";
+        /// <summary>The chance (0–1) an action's hit on this unit misses. Optional.</summary>
+        public const string Evasion = "Evasion";
+        /// <summary>Extra damage this unit's hits deal, as a share (0.25 is 25% more; read as <c>1 + value</c>). Optional.</summary>
+        public const string DamageDealt = "DamageDealt";
+        /// <summary>Extra damage hits on this unit deal, as a share (−0.15 is 15% less; read as <c>1 + value</c>). Optional.</summary>
+        public const string DamageTaken = "DamageTaken";
     }
 }

@@ -24,7 +24,13 @@ namespace CupkekGames.Combat
             _combatSettings = combatSettings;
         }
 
-        public void Add(ICombatManager manager, StatusEffect statusEffect)
+        /// <summary>
+        /// Puts <paramref name="statusEffect"/> on the unit; false when it was refused (the unit
+        /// is immune, <see cref="CombatUnit.IsImmuneTo"/>, or a higher level is on). One it has
+        /// already stacks as its <see cref="StatusEffectSO.Stacking"/> says, and keeps the longer
+        /// time.
+        /// </summary>
+        public bool Add(ICombatManager manager, StatusEffect statusEffect)
         {
             if (statusEffect.Duration <= 0)
             {
@@ -32,39 +38,38 @@ namespace CupkekGames.Combat
             }
 
             StatusEffectSO definition = statusEffect.Definition;
+            if (_owner.IsImmuneTo(definition)) return false;
 
-            if (_effects.ContainsKey(definition))
+            bool additive = definition.Stacking == StatusStacking.Additive;
+
+            if (_effects.TryGetValue(definition, out StatusEffect current))
             {
-                StatusEffect currentStatusEffect = _effects[definition];
+                if (additive)
+                {
+                    current.Level = Math.Min(definition.MaxStacks, current.Level + statusEffect.Level);
+                }
+                else if (current.Level > statusEffect.Level)
+                {
+                    return false;
+                }
+                else
+                {
+                    current.Level = statusEffect.Level;
+                }
 
-                if (currentStatusEffect.Level > statusEffect.Level)
-                {
-                    return;
-                }
-                else if (currentStatusEffect.Level == statusEffect.Level)
-                {
-                    _effects[definition].Duration = statusEffect.Duration > currentStatusEffect.Duration
-                        ? statusEffect.Duration
-                        : currentStatusEffect.Duration;
-                    OnUpdate?.Invoke(_effects[definition]);
-                    return;
-                }
-                else if (currentStatusEffect.Level < statusEffect.Level)
-                {
-                    _effects[definition].Level = statusEffect.Level;
-                    OnUpdate?.Invoke(_effects[definition]);
-                    return;
-                }
+                current.Duration = Math.Max(current.Duration, statusEffect.Duration);
+                OnUpdate?.Invoke(current);
+                return true;
             }
-            else
-            {
-                _effects[definition] = statusEffect;
 
-                statusEffect.OnEnd += OnStatusEffectEnd;
-                statusEffect.StartExecuteLoop(_combatSettings, manager, _owner);
+            if (additive) statusEffect.Level = Math.Min(definition.MaxStacks, statusEffect.Level);
+            _effects[definition] = statusEffect;
 
-                OnAdd?.Invoke(statusEffect);
-            }
+            statusEffect.OnEnd += OnStatusEffectEnd;
+            statusEffect.StartExecuteLoop(_combatSettings, manager, _owner);
+
+            OnAdd?.Invoke(statusEffect);
+            return true;
         }
 
         private void OnStatusEffectEnd(StatusEffect statusEffect)

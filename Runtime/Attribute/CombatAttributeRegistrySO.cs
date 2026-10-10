@@ -8,7 +8,7 @@ namespace CupkekGames.Combat
     [Serializable]
     public class CombatRoleEntry
     {
-        [Tooltip("Role key. Use CombatRoles constants for standard slots (HP/MP/ATK/MATK/DEF/MDEF/SPEED/CritChance/CritDmg). Game-specific roles can use any string.")]
+        [Tooltip("Role key. Use CombatRoles constants for standard slots (HP/MP/ATK/MATK/DEF/MDEF/SPEED/CritChance/CritDmg/Evasion/DamageDealt/DamageTaken). Game-specific roles can use any string.")]
         public string Role;
 
         [Tooltip("The AttributeDefinitionSO that plays this role for this game.")]
@@ -54,6 +54,9 @@ namespace CupkekGames.Combat
         public AttributeDefinitionSO SPEED => GetByRole(CombatRoles.SPEED);
         public AttributeDefinitionSO CritChance => GetByRole(CombatRoles.CritChance);
         public AttributeDefinitionSO CritDmg => GetByRole(CombatRoles.CritDmg);
+        public AttributeDefinitionSO Evasion => GetByRole(CombatRoles.Evasion);
+        public AttributeDefinitionSO DamageDealt => GetByRole(CombatRoles.DamageDealt);
+        public AttributeDefinitionSO DamageTaken => GetByRole(CombatRoles.DamageTaken);
 
         public List<string> GetAttributeNames()
         {

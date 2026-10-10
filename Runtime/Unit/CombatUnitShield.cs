@@ -2,52 +2,58 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using UnityEngine;
 
 namespace CupkekGames.Combat
 {
+    /// <summary>
+    /// A unit's shields, shortest-lived first: damage drains them in that order before health.
+    /// A shield ends broken, expired or with its owner gone (<see cref="CombatShieldEndReason"/>),
+    /// and <see cref="OnShieldNodeRemove"/> reports it once, after the shields have settled.
+    /// </summary>
     [Serializable]
     public class CombatUnitShield
     {
         private List<CombatUnitShieldNode> _shields = new();
+        private readonly List<CombatUnitShieldNode> _ended = new();
         public List<CombatUnitShieldNode> Shields => _shields;
         public event Action<int> OnShieldValueChange;
         public event Action<CombatUnitShieldNode> OnShieldNodeAdd;
         public event Action<CombatUnitShieldNode> OnShieldNodeUpdate;
+        /// <summary>A shield ended; its <see cref="CombatUnitShieldNode.EndReason"/> says why.</summary>
         public event Action<CombatUnitShieldNode> OnShieldNodeRemove;
         public int TotalShield => _shields.Sum(s => s.Shield);
-        private CombatUnit _caster;
-        public CombatUnit Caster => _caster;
+        private CombatUnit _owner;
+        /// <summary>The unit the shields are on.</summary>
+        public CombatUnit Owner => _owner;
 
-        public CombatUnitShield(CombatUnit caster)
+        public CombatUnitShield(CombatUnit owner)
         {
-            _caster = caster;
+            _owner = owner;
         }
 
         /// <summary>
-        /// Applies damage to the combat unit's shields. The damage is distributed across
-        /// the shields in the order they are stored. If a shield's health reaches zero,
-        /// it is removed from the list of shields.
+        /// Drains <paramref name="damage"/> from the shields in order; each one emptied ends
+        /// broken. Returns the damage left for health.
         /// </summary>
-        /// <param name="damage">The amount of damage to apply.</param>
-        /// <returns>The remaining damage after all shields have been damaged.</returns>
         public int Damage(int damage)
         {
-            int removed = _shields.RemoveAll(shield =>
+            int i = 0;
+            while (i < _shields.Count && damage > 0)
             {
-                damage = shield.Damage(damage);
-
-                bool remove = shield.Shield == 0;
-
-                if (remove)
+                CombatUnitShieldNode shield = _shields[i];
+                damage = shield.Absorb(damage);
+                if (shield.Shield > 0)
                 {
-                    OnShieldNodeRemove?.Invoke(shield);
+                    i++;
+                    continue;
                 }
 
-                return remove;
-            });
+                _shields.RemoveAt(i);
+                _ended.Add(shield);
+            }
 
             OnShieldValueChange?.Invoke(TotalShield);
+            ReportEnded(CombatShieldEndReason.Broken);
 
             return damage;
         }
@@ -91,20 +97,53 @@ namespace CupkekGames.Combat
 
                 _shields.Insert(index, shield);
 
-                shield.StartCooldown(_caster, duration, unitDeathToken);
-                shield.OnExpire += OnExpire;
+                shield.Owner = _owner;
+                shield.StartCooldown(_owner, duration, unitDeathToken);
+                shield.Expired += OnExpire;
 
                 OnShieldValueChange?.Invoke(TotalShield);
                 OnShieldNodeAdd?.Invoke(shield);
             }
         }
 
+        /// <summary>Ends every shield for <paramref name="reason"/> (the owner is gone).</summary>
+        public void Clear(CombatShieldEndReason reason)
+        {
+            if (_shields.Count == 0) return;
+
+            _ended.AddRange(_shields);
+            _shields.Clear();
+            OnShieldValueChange?.Invoke(0);
+            ReportEnded(reason);
+        }
+
         private void OnExpire(CombatUnitShieldNode shield)
         {
-            _shields.Remove(shield);
+            if (!_shields.Remove(shield)) return;
 
+            _ended.Add(shield);
             OnShieldValueChange?.Invoke(TotalShield);
-            OnShieldNodeRemove?.Invoke(shield);
+            ReportEnded(CombatShieldEndReason.Expired);
+        }
+
+        // Ends the shields set aside, then reports each: a handler may add or drain shields on
+        // this unit again, so nothing is reported mid-walk.
+        private void ReportEnded(CombatShieldEndReason reason)
+        {
+            if (_ended.Count == 0) return;
+
+            CombatUnitShieldNode[] ended = _ended.ToArray();
+            _ended.Clear();
+            foreach (CombatUnitShieldNode shield in ended)
+            {
+                shield.Expired -= OnExpire;
+                shield.End(reason);
+            }
+
+            foreach (CombatUnitShieldNode shield in ended)
+            {
+                OnShieldNodeRemove?.Invoke(shield);
+            }
         }
     }
 }

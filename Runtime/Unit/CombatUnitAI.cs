@@ -348,13 +348,14 @@ namespace CupkekGames.Combat
       }
     }
 
-    // The action for this turn: the ultimate at full mana unless silenced. An ultimate that
+    // The action for this turn: the ultimate at full mana unless silenced or held back
+    // (CombatUnit.CanCastUltimate). An ultimate that
     // can never reach anyone (its slot holds no action that picks someone) gives way to the
     // normal action, so a placeholder never locks its unit out.
     private CombatActionSO SelectAction()
     {
       int normal = _combatSettings.DefaultActionTypeId;
-      _actionType = _silenced ? normal : _caster.Mana.GetNextActionType();
+      _actionType = _silenced || !_caster.CanCastUltimate ? normal : _caster.Mana.GetNextActionType();
       CombatActionSO action = _caster.GetCombatAction(_actionType, _combatManager, _caster, _primaryTarget);
       if (action == null && _actionType != normal)
       {

@@ -72,7 +72,7 @@ namespace CupkekGames.Combat
 
         ctx.CombatManager.PopupManager.Show(PopupKinds.Shield, target.View.HealthBarTransform.position, damage);
 
-        CombatUnitShieldNode shield = new CombatUnitShieldNode(damage, _id.Value(), attributeEffectRuntime);
+        CombatUnitShieldNode shield = new CombatUnitShieldNode(damage, _id.Value(), attributeEffectRuntime, ctx.Caster);
 
         target.Shield.AddShield(shield, duration, cancellationToken);
       }

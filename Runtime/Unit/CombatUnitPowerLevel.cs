@@ -11,20 +11,6 @@ namespace CupkekGames.Combat
             _combatSettings = combatSettings;
         }
 
-        public bool TryCritical(CombatRandom random)
-        {
-            if (_owner.Attributes.CritChance == null) return false;
-            float critChance = _owner.GetAttributeValue(_owner.Attributes.CritChance);
-            return random.Value() <= critChance;
-        }
-
-        public float ApplyCritical(float damage)
-        {
-            if (_owner.Attributes.CritDmg == null) return damage;
-            float critDamage = _owner.GetAttributeValue(_owner.Attributes.CritDmg);
-            return damage * critDamage;
-        }
-
         public int GetATK(int bonusLevel = 0)
         {
             var attrs = _owner.Attributes;

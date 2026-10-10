@@ -215,16 +215,184 @@ namespace CupkekGames.Combat
             if (pauseAnimation) _view.AnimationTimeController?.Pause();
         }
 
+        /// <summary>Starts the unit's AI and animation; a stunned unit stays still until its last stun ends.</summary>
         public void StartAI()
         {
-            if (_view == null) return;
+            if (_view == null || IsStunned) return;
             var ai = _view.CombatUnitAI;
             if (ai != null && ai.IsSetup) ai.StartAI();
             _view.AnimationTimeController?.Resume();
         }
 
-        public void SetSilenced(bool silence) => _view?.CombatUnitAI?.SetSilenced(silence);
-        public void SetRooted(bool root) => _view?.CombatUnitAI?.Mover?.SetRooted(root);
+        // ── Controls (counted: overlapping stuns, silences and roots hold until the last ends) ──
+
+        private int _stuns;
+        private int _silences;
+        private int _roots;
+
+        public bool IsStunned => _stuns > 0;
+        public bool IsSilenced => _silences > 0;
+        public bool IsRooted => _roots > 0;
+
+        /// <summary>One more stun: the first stops the unit (its AI and its animation).</summary>
+        public void Stun()
+        {
+            if (_stuns++ == 0) StopAI(false, true);
+        }
+
+        /// <summary>One stun ends: the last starts the unit again.</summary>
+        public void Unstun()
+        {
+            if (_stuns == 0) throw new InvalidOperationException($"[CombatUnit] '{Key}' ends a stun it does not have.");
+            if (--_stuns == 0) StartAI();
+        }
+
+        /// <summary>One more silence: the first makes the unit use only its normal action (<see cref="CombatUnitAI.SetSilenced"/>).</summary>
+        public void Silence()
+        {
+            if (_silences++ == 0) _view?.CombatUnitAI?.SetSilenced(true);
+        }
+
+        /// <summary>One silence ends: the last lets the unit cast again.</summary>
+        public void Unsilence()
+        {
+            if (_silences == 0) throw new InvalidOperationException($"[CombatUnit] '{Key}' ends a silence it does not have.");
+            if (--_silences == 0) _view?.CombatUnitAI?.SetSilenced(false);
+        }
+
+        /// <summary>One more root: the first holds the unit where it stands.</summary>
+        public void Root()
+        {
+            if (_roots++ == 0) _view?.CombatUnitAI?.Mover?.SetRooted(true);
+        }
+
+        /// <summary>One root ends: the last lets the unit move again.</summary>
+        public void Unroot()
+        {
+            if (_roots == 0) throw new InvalidOperationException($"[CombatUnit] '{Key}' ends a root it does not have.");
+            if (--_roots == 0) _view?.CombatUnitAI?.Mover?.SetRooted(false);
+        }
+
+        /// <summary>The controls this unit shrugs off now (<see cref="IControlImmunity"/>).</summary>
+        public CombatControl ImmuneControls
+        {
+            get
+            {
+                CombatControl immune = CombatControl.None;
+                foreach (var feature in _unit.Features)
+                    if (feature is IControlImmunity immunity)
+                        immune |= immunity.GetImmuneControls(this);
+                return immune;
+            }
+        }
+
+        /// <summary>Whether <paramref name="status"/> is kept off this unit: a feature refuses it (<see cref="IStatusImmunity"/>), or it carries a control the unit shrugs off.</summary>
+        public bool IsImmuneTo(StatusEffectSO status)
+        {
+            if (status == null) throw new ArgumentNullException(nameof(status));
+            if ((status.Controls & ImmuneControls) != CombatControl.None) return true;
+            foreach (var feature in _unit.Features)
+                if (feature is IStatusImmunity immunity && immunity.IsImmune(this, status))
+                    return true;
+            return false;
+        }
+
+        // ── Chances ──
+
+        /// <summary>
+        /// Rolls <paramref name="chance"/> (0–1) on the fight's <paramref name="random"/>:
+        /// twice, keeping the better, while a feature makes the unit lucky
+        /// (<see cref="IChanceRollModifier"/>). Every roll draws, whatever the chance.
+        /// </summary>
+        public bool RollChance(float chance, CombatRandom random)
+        {
+            if (random == null) throw new ArgumentNullException(nameof(random));
+            bool hit = random.Value() < chance;
+            if (!IsLucky) return hit;
+            bool second = random.Value() < chance;
+            return hit || second;
+        }
+
+        /// <summary>Every chance this unit rolls rolls twice (<see cref="IChanceRollModifier"/>).</summary>
+        public bool IsLucky
+        {
+            get
+            {
+                foreach (var feature in _unit.Features)
+                    if (feature is IChanceRollModifier lucky && lucky.RollsTwice(this))
+                        return true;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// How this unit's hit on <paramref name="target"/> crits: <paramref name="policy"/> when
+        /// the call names one, else its features' (<see cref="ICritModifier"/>: Never beats
+        /// Always), else a roll.
+        /// </summary>
+        public CombatCritPolicy GetCritPolicy(CombatUnit target, CombatSource source, CombatCritPolicy policy = CombatCritPolicy.Roll)
+        {
+            if (policy != CombatCritPolicy.Roll) return policy;
+
+            CombatCritPolicy result = CombatCritPolicy.Roll;
+            foreach (var feature in _unit.Features)
+            {
+                if (feature is not ICritModifier modifier) continue;
+                CombatCritPolicy asked = modifier.GetCritPolicy(this, target, source);
+                if (asked == CombatCritPolicy.Never) return CombatCritPolicy.Never;
+                if (asked == CombatCritPolicy.Always) result = CombatCritPolicy.Always;
+            }
+
+            return result;
+        }
+
+        /// <summary>Whether this unit's hit on <paramref name="target"/> is a critical hit: rolled on its critical chance unless a policy decides it.</summary>
+        public bool TryCritical(CombatUnit target, CombatSource source, CombatRandom random, CombatCritPolicy policy = CombatCritPolicy.Roll)
+        {
+            switch (GetCritPolicy(target, source, policy))
+            {
+                case CombatCritPolicy.Always: return true;
+                case CombatCritPolicy.Never: return false;
+            }
+
+            if (Attributes.CritChance == null) return false;
+            return RollChance(GetAttributeValue(Attributes.CritChance), random);
+        }
+
+        /// <summary><paramref name="damage"/> as a critical hit: times the critical damage attribute, unchanged without one.</summary>
+        public float ApplyCritical(float damage)
+        {
+            if (Attributes.CritDmg == null) return damage;
+            return damage * GetAttributeValue(Attributes.CritDmg);
+        }
+
+        // ── Mana and the ultimate ──
+
+        /// <summary>What this unit's mana gains are multiplied by (<see cref="IManaGainModifier"/>); 1 without one.</summary>
+        public float ManaGainMultiplier
+        {
+            get
+            {
+                float multiplier = 1f;
+                foreach (var feature in _unit.Features)
+                    if (feature is IManaGainModifier modifier)
+                        multiplier *= modifier.GetManaGainMultiplier(this);
+                return Mathf.Max(0f, multiplier);
+            }
+        }
+
+        /// <summary>Whether a full bar may select the ultimate: no feature holds it back (<see cref="IUltimateGate"/>). A silence is apart.</summary>
+        public bool CanCastUltimate
+        {
+            get
+            {
+                foreach (var feature in _unit.Features)
+                    if (feature is IUltimateGate gate && !gate.CanCastUltimate(this))
+                        return false;
+                return true;
+            }
+        }
+
         public void AddThreat(CombatUnit source, int threatAmount) => _view?.CombatUnitAI?.CombatUnitThreatTable.AddThreat(source, threatAmount);
 
         public void UnregisterView()
@@ -280,13 +448,18 @@ namespace CupkekGames.Combat
         }
 
         /// <summary>
-        /// Ends the unit's fight life: its statuses end quietly, then its tokens go. A status
+        /// Ends the unit's fight life: its statuses end quietly, its shields go (the owner is
+        /// gone) and its controls clear, then its tokens go. A status
         /// left running would end on the cancelled token and act on a unit that is gone (a
         /// stun's end restarted the AI of a hero whose fight was over).
         /// </summary>
         public void KillAI()
         {
             StatusEffects?.DisposeAll();
+            Shield?.Clear(CombatShieldEndReason.OwnerGone);
+            _stuns = 0;
+            _silences = 0;
+            _roots = 0;
             _interruptToken?.Cancel();
             _interruptToken?.Dispose();
             _interruptToken = null;

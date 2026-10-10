@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using CupkekGames.RPGStats;
 using CupkekGames.TextPopup;
+using CupkekGames.Units;
 
 namespace CupkekGames.Combat
 {
@@ -45,10 +46,15 @@ namespace CupkekGames.Combat
         }
 
         /// <summary>
-        /// Pure-math portion of dealing damage: applies crit, element (the
-        /// attacker's attack element, <see cref="CombatUnit.GetAttackElement"/>),
-        /// defense, and user-provided <see cref="IDamageModifier"/> hooks in order.
-        /// Returns the final integer damage and whether a crit occurred.
+        /// Pure-math portion of dealing damage, in order: an action's hit can miss (the
+        /// target's <see cref="CombatRoles.Evasion"/>, rolled through
+        /// <see cref="CombatUnit.RollChance"/>; nothing else is rolled then), the crit
+        /// (<see cref="CombatUnit.TryCritical"/>: <paramref name="critPolicy"/>, the attacker's
+        /// <see cref="ICritModifier"/>s, its critical chance), element (the attacker's attack
+        /// element, <see cref="CombatUnit.GetAttackElement"/>), the attacker's
+        /// <see cref="CombatRoles.DamageDealt"/> and <see cref="IDamageDealtModifier"/>s, the
+        /// target's <see cref="CombatRoles.DamageTaken"/> and <see cref="IDamageTakenModifier"/>s,
+        /// the rules' raw <see cref="IDamageModifier"/>s, defense, then their final hooks.
         /// Does NOT apply damage to the target or trigger any visual effects.
         /// </summary>
         public static DamageResult CalculateAttackDamage(
@@ -58,12 +64,18 @@ namespace CupkekGames.Combat
           float rawAttack,
           DamageTypeDefinitionSO damageType,
           CombatSource source,
-          CombatRandom random)
+          CombatRandom random,
+          CombatCritPolicy critPolicy = CombatCritPolicy.Roll)
         {
             if (source == null) throw new System.ArgumentNullException(nameof(source), "A hit needs its source.");
 
-            bool isCrit = attacker.PowerLevel.TryCritical(random);
-            float attack = isCrit ? attacker.PowerLevel.ApplyCritical(rawAttack) : rawAttack;
+            if (source.Kind == CombatSourceKind.Action && IsMiss(target, random))
+            {
+                return new DamageResult { IsMiss = true, ElementMultiplier = 1f, Source = source };
+            }
+
+            bool isCrit = attacker.TryCritical(target, source, random, critPolicy);
+            float attack = isCrit ? attacker.ApplyCritical(rawAttack) : rawAttack;
 
             float elementMultiplier = ElementMultiplier(combatRules, attacker, target);
             attack *= elementMultiplier;
@@ -80,6 +92,8 @@ namespace CupkekGames.Combat
                 ActionSO = source.Action,
                 Source = source,
             };
+
+            attack = ApplyUnitModifiers(attacker, target, attack, ctx);
 
             // Apply raw damage modifiers (before defense)
             IReadOnlyList<IDamageModifier> modifiers = combatRules.DamageModifiers;
@@ -135,6 +149,32 @@ namespace CupkekGames.Combat
             };
         }
 
+        // The target dodges: its evasion, rolled (twice when it is lucky).
+        private static bool IsMiss(CombatUnit target, CombatRandom random)
+        {
+            AttributeDefinitionSO evasion = target.Attributes.Evasion;
+            return evasion != null && target.RollChance(target.GetAttributeValue(evasion), random);
+        }
+
+        // The attacker's share of extra damage and its features, then the target's.
+        private static float ApplyUnitModifiers(CombatUnit attacker, CombatUnit target, float attack, DamageContext ctx)
+        {
+            if (attacker != null)
+            {
+                attack *= 1f + attacker.GetAttributeValue(attacker.Attributes.DamageDealt);
+                foreach (IUnitFeature feature in attacker.Features)
+                    if (feature is IDamageDealtModifier dealt)
+                        attack = dealt.ModifyDamageDealt(attacker, target, attack, ctx);
+            }
+
+            attack *= 1f + target.GetAttributeValue(target.Attributes.DamageTaken);
+            foreach (IUnitFeature feature in target.Features)
+                if (feature is IDamageTakenModifier taken)
+                    attack = taken.ModifyDamageTaken(target, attacker, attack, ctx);
+
+            return Mathf.Max(0f, attack);
+        }
+
         private static float ElementMultiplier(ICombatRules combatRules, CombatUnit attacker, CombatUnit target)
             => combatRules.ElementRelationshipTable.GetMultiplier(attacker?.GetAttackElement(), target.CombatData?.Element);
 
@@ -153,6 +193,17 @@ namespace CupkekGames.Combat
             // nothing is left to hurt or to show.
             if (target.Health.Current <= 0)
             {
+                return;
+            }
+
+            if (result.IsMiss)
+            {
+                if (target.View != null)
+                {
+                    manager.PopupManager.Show(CombatPopupKinds.Miss, target.View.HealthBarTransform.position);
+                }
+
+                manager.EventDatabase.InvokeOnMiss(attacker, target, result.Source);
                 return;
             }
 
@@ -204,6 +255,8 @@ namespace CupkekGames.Combat
     public struct DamageResult
     {
         public int Damage;
+        /// <summary>The target dodged: no damage, nothing lands (<see cref="CombatRoles.Evasion"/>).</summary>
+        public bool IsMiss;
         public bool IsCrit;
         public float ElementMultiplier;
         /// <summary>Where the damage comes from: the hit names it.</summary>

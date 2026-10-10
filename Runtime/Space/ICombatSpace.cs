@@ -32,6 +32,31 @@ namespace CupkekGames.Combat
         void Collect(in CombatArea area, List<CombatUnit> results);
 
         /// <summary>
+        /// Adds every unit within <paramref name="rings"/> combat units of <paramref name="center"/>
+        /// to <paramref name="results"/> (cleared first): its own place and the rings around it,
+        /// both sides, <paramref name="center"/> included, in the space's own order. Nothing when
+        /// <paramref name="center"/> is not on the field.
+        /// </summary>
+        void CollectAround(CombatUnit center, int rings, List<CombatUnit> results);
+
+        /// <summary>
+        /// Adds every unit on the line from <paramref name="from"/> through
+        /// <paramref name="through"/> and on past it, <paramref name="length"/> combat units long,
+        /// to <paramref name="results"/> (cleared first): both sides, <paramref name="from"/> left
+        /// out, in the space's own order. Nothing when either is not on the field.
+        /// </summary>
+        void CollectLine(CombatUnit from, CombatUnit through, int length, List<CombatUnit> results);
+
+        /// <summary>
+        /// Pushes <paramref name="unit"/> straight away from <paramref name="from"/> by up to
+        /// <paramref name="tiles"/> combat units, stopping before the first place it cannot take
+        /// (the edge, a wall, another unit); its body follows over <paramref name="duration"/>
+        /// seconds. Returns how far it moved: 0 when either is not on the field. Checks no
+        /// immunity: <see cref="CombatPush"/> does.
+        /// </summary>
+        int Push(CombatUnit unit, CombatUnit from, int tiles, float duration);
+
+        /// <summary>
         /// Draws the warning for <paramref name="area"/> in <paramref name="color"/>: exactly the
         /// cells <see cref="Collect"/> takes for it, outlined, its fill empty until
         /// <see cref="CombatAreaMark.Fill"/>.

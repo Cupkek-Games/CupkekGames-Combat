@@ -8,13 +8,46 @@ using Unity.Scripting.LifecycleManagement;
 
 namespace CupkekGames.Combat
 {
+    /// <summary>Why a shield ended.</summary>
+    public enum CombatShieldEndReason
+    {
+        /// <summary>Still up.</summary>
+        None,
+        /// <summary>Damage emptied it.</summary>
+        Broken,
+        /// <summary>Its time ran out with some left.</summary>
+        Expired,
+        /// <summary>Its owner left the fight (fell, or the fight ended).</summary>
+        OwnerGone,
+    }
+
+    /// <summary>
+    /// One shield on a unit: who cast it, how much it granted, how much it has absorbed and
+    /// has left, and, once over, why it ended.
+    /// </summary>
     [Serializable]
     public partial class CombatUnitShieldNode
     {
         private Guid _id;
         public Guid ID => _id;
         private int _shield;
+        /// <summary>What it has left.</summary>
         public int Shield => _shield;
+
+        /// <summary>The unit that cast it; null when nobody did.</summary>
+        public CombatUnit Caster { get; }
+
+        /// <summary>The unit it is on; set when it is added.</summary>
+        public CombatUnit Owner { get; internal set; }
+
+        /// <summary>What it granted in all: its amount, and what was stacked on it since.</summary>
+        public int Granted { get; private set; }
+
+        /// <summary>The damage it has taken.</summary>
+        public int Absorbed { get; private set; }
+
+        /// <summary>Why it ended; <see cref="CombatShieldEndReason.None"/> while it is up.</summary>
+        public CombatShieldEndReason EndReason { get; private set; }
 
         private float _startDuration = 0;
         public float StartDuration => _startDuration;
@@ -32,7 +65,8 @@ namespace CupkekGames.Combat
             }
         }
         public event Action<int> OnChange;
-        public event Action<CombatUnitShieldNode> OnExpire;
+        // Its countdown ran out; its owner's shields end it.
+        internal event Action<CombatUnitShieldNode> Expired;
         // Display
         [NoAutoStaticsCleanup]
         public static UIColor Color = new UIColor("amber", UIColorValue.V_400);
@@ -40,46 +74,37 @@ namespace CupkekGames.Combat
         private CombatAttributeDataEffectRuntime _buff;
         public CombatAttributeDataEffectRuntime Buff => _buff;
 
-        public CombatUnitShieldNode(int shield, Guid id, CombatAttributeDataEffectRuntime buff)
+        public CombatUnitShieldNode(int shield, Guid id, CombatAttributeDataEffectRuntime buff, CombatUnit caster = null)
         {
-            if (id == null)
-            {
-                _id = Guid.NewGuid();
-            }
-            else
-            {
-                _id = id;
-            }
-
+            _id = id == Guid.Empty ? Guid.NewGuid() : id;
             _buff = buff;
             _shield = shield;
+            Granted = shield;
+            Caster = caster;
         }
 
-        public int Damage(int damage)
+        // Takes what it can of the damage; returns what is left.
+        internal int Absorb(int damage)
         {
-            int remainingDamage = Math.Max(0, damage - _shield);
-            _shield = Math.Max(0, _shield - damage);
+            int taken = Math.Min(Math.Max(0, damage), _shield);
+            _shield -= taken;
+            Absorbed += taken;
 
             OnChange?.Invoke(_shield);
 
-            if (_shield == 0)
-            {
-                _countdown.Dispose();
-
-                OnExpire?.Invoke(this);
-            }
-
-            return remainingDamage;
+            return damage - taken;
         }
 
         public void AddShield(int amount, bool notice)
         {
             _shield += amount;
+            Granted += amount;
             if (notice)
             {
                 OnChange?.Invoke(_shield);
             }
         }
+
         public void SetShield(int amount, bool notice)
         {
             _shield = amount;
@@ -90,13 +115,13 @@ namespace CupkekGames.Combat
             }
         }
 
-        public void StartCooldown(CombatUnit caster, float duration, CancellationToken skillCancelToken)
+        public void StartCooldown(CombatUnit owner, float duration, CancellationToken skillCancelToken)
         {
             _countdown?.Dispose();
 
             _startDuration = duration;
 
-            _countdown = new CountdownTimeContext(caster.TimeBundle.TimeContext, _startDuration, 0, StatusEffect.INTERVAL_VISUAL, skillCancelToken);
+            _countdown = new CountdownTimeContext(owner.TimeBundle.TimeContext, _startDuration, 0, StatusEffect.INTERVAL_VISUAL, skillCancelToken);
             _countdown.OnComplete += OnComplete;
             _countdown.Start();
         }
@@ -106,12 +131,17 @@ namespace CupkekGames.Combat
             _countdown.Value = duration;
         }
 
+        internal void End(CombatShieldEndReason reason)
+        {
+            _countdown?.Dispose();
+            EndReason = reason;
+        }
+
         private void OnComplete()
         {
-            _countdown.Dispose();
-
-            OnExpire?.Invoke(this);
+            Expired?.Invoke(this);
         }
+
         public ItemStatDisplayLine GetShieldLine()
         {
             return new ItemStatDisplayLine

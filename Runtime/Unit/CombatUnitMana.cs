@@ -4,12 +4,19 @@ using UnityEngine;
 
 namespace CupkekGames.Combat
 {
+    /// <summary>
+    /// A unit's mana. What its actions and the damage it takes give is multiplied by its
+    /// <see cref="CombatUnit.ManaGainMultiplier"/>, the fraction carried to the next gain;
+    /// <see cref="Increase"/> adds an exact amount.
+    /// </summary>
     public class CombatUnitMana
     {
         private readonly CombatUnit _owner;
         private readonly ICombatSettings _combatSettings;
         private int _current;
         private int _takeDamageManaTrack;
+        // The fraction of a gain the multiplier left over, carried to the next.
+        private float _carry;
 
         public int Current => _current;
 
@@ -25,6 +32,7 @@ namespace CupkekGames.Combat
         public void Reset()
         {
             _current = 0;
+            _carry = 0f;
         }
 
         public void OnTakeAction(int actionType)
@@ -38,10 +46,10 @@ namespace CupkekGames.Combat
                 switch (effect.Effect)
                 {
                     case ManaEffectType.GainAttribute:
-                        IncreaseByAttribute();
+                        GainByAttribute();
                         break;
                     case ManaEffectType.GainAmount:
-                        Increase((int)effect.Value);
+                        Gain((int)effect.Value);
                         break;
                     case ManaEffectType.DrainAll:
                         _current = 0;
@@ -51,13 +59,24 @@ namespace CupkekGames.Combat
             }
         }
 
-        public void IncreaseByAttribute()
+        /// <summary>A gain of the unit's MP attribute, multiplied by its gain multiplier.</summary>
+        public void GainByAttribute()
         {
             if (_owner.Attributes.MP == null) return;
             float mpStat = _owner.GetAttributeValue(_owner.Attributes.MP);
-            Increase((int)mpStat);
+            Gain((int)mpStat);
         }
 
+        // A gain from what the unit does: multiplied, the fraction carried.
+        private void Gain(int amount)
+        {
+            _carry += amount * _owner.ManaGainMultiplier;
+            int whole = (int)_carry;
+            _carry -= whole;
+            if (whole > 0) Increase(whole);
+        }
+
+        /// <summary>Adds exactly <paramref name="amount"/> (a potion, a test), up to full.</summary>
         public void Increase(int amount)
         {
             _current += amount;
@@ -66,7 +85,8 @@ namespace CupkekGames.Combat
         }
 
         /// <summary>
-        /// Tracks mana gain from taking damage. Every 100 damage taken grants mana equal to MP stat.
+        /// Tracks mana gain from taking damage: every <see cref="IAutobattlerSettings.TakeDamageManaInterval"/>
+        /// damage taken gains the MP attribute (multiplied).
         /// </summary>
         public void OnTakeDamageManaTrack(int damage)
         {
@@ -74,7 +94,7 @@ namespace CupkekGames.Combat
             if (_takeDamageManaTrack >= _combatSettings.TakeDamageManaInterval)
             {
                 _takeDamageManaTrack = 0;
-                IncreaseByAttribute();
+                GainByAttribute();
             }
         }
 

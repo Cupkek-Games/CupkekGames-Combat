@@ -16,6 +16,9 @@ namespace CupkekGames.Combat
         public abstract bool InRange(CombatUnit caster, CombatUnit target, float range);
         public abstract int StepsToReach(CombatUnit caster, CombatUnit target, float range);
         public abstract void Collect(in CombatArea area, List<CombatUnit> results);
+        public abstract void CollectAround(CombatUnit center, int rings, List<CombatUnit> results);
+        public abstract void CollectLine(CombatUnit from, CombatUnit through, int length, List<CombatUnit> results);
+        public abstract int Push(CombatUnit unit, CombatUnit from, int tiles, float duration);
         public abstract CombatAreaMark ShowArea(in CombatArea area, Color color);
         public abstract float ToWorld(float units);
         public abstract ICombatMover CreateMover(CombatUnitView view);

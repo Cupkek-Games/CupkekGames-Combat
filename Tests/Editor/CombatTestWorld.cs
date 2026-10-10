@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading;
 using UnityEditor;
 using UnityEngine;
+using CupkekGames.Cameras;
 using CupkekGames.RPGStats;
+using CupkekGames.TextPopup;
 using CupkekGames.TimeSystem;
 using CupkekGames.Units;
 
@@ -10,7 +13,8 @@ namespace CupkekGames.Combat.Tests
 {
     /// <summary>
     /// A scene-free combat world for the package's tests: a clock, an attribute
-    /// registry (HP, MP, ATK), an element table and settings, and units built
+    /// registry (HP, MP, ATK, the crit pair, evasion and the damage shares), an
+    /// element table and settings, and units built
     /// from in-memory definitions. Assets the runtime keeps private are authored
     /// through <see cref="SerializedObject"/>, as the inspector would.
     /// </summary>
@@ -22,6 +26,11 @@ namespace CupkekGames.Combat.Tests
         public AttributeDefinitionSO HP { get; }
         public AttributeDefinitionSO MP { get; }
         public AttributeDefinitionSO ATK { get; }
+        public AttributeDefinitionSO CritChance { get; }
+        public AttributeDefinitionSO CritDmg { get; }
+        public AttributeDefinitionSO Evasion { get; }
+        public AttributeDefinitionSO DamageDealt { get; }
+        public AttributeDefinitionSO DamageTaken { get; }
 
         private readonly TimeManager _time;
         private readonly List<Object> _owned = new();
@@ -35,6 +44,11 @@ namespace CupkekGames.Combat.Tests
             HP = Own(Attribute("HP"));
             MP = Own(Attribute("MP"));
             ATK = Own(Attribute("ATK"));
+            CritChance = Own(Attribute("CritChance"));
+            CritDmg = Own(Attribute("CritDmg"));
+            Evasion = Own(Attribute("Evasion"));
+            DamageDealt = Own(Attribute("DamageDealt"));
+            DamageTaken = Own(Attribute("DamageTaken"));
 
             CombatAttributeRegistrySO registry = Own(ScriptableObject.CreateInstance<CombatAttributeRegistrySO>());
             SerializedObject so = new SerializedObject(registry);
@@ -43,6 +57,8 @@ namespace CupkekGames.Combat.Tests
             (string role, AttributeDefinitionSO attribute)[] slots =
             {
                 (CombatRoles.HP, HP), (CombatRoles.MP, MP), (CombatRoles.ATK, ATK),
+                (CombatRoles.CritChance, CritChance), (CombatRoles.CritDmg, CritDmg), (CombatRoles.Evasion, Evasion),
+                (CombatRoles.DamageDealt, DamageDealt), (CombatRoles.DamageTaken, DamageTaken),
             };
             attributes.arraySize = slots.Length;
             roles.arraySize = slots.Length;
@@ -102,6 +118,18 @@ namespace CupkekGames.Combat.Tests
             foreach (IUnitFeature feature in features) unit.AddFeature(feature);
             unit.Initialize();
             return unit;
+        }
+
+        /// <summary>Sets <paramref name="unit"/>'s base <paramref name="attribute"/> (its definition is its own).</summary>
+        public void Set(CombatUnit unit, AttributeDefinitionSO attribute, float value)
+            => unit.CombatData.BaseAttributes.SetValue(attribute, value);
+
+        /// <summary>A fight around <paramref name="field"/>: its event stream, popups recorded, seeded random numbers.</summary>
+        public FakeCombatManager Manager(FakeUnitManager field = null, int seed = 1)
+        {
+            GameObject events = new GameObject("CombatTestWorld.Events");
+            _owned.Add(events);
+            return new FakeCombatManager(field ?? new FakeUnitManager(), events.AddComponent<EventDatabaseCombat>(), new CombatRandom(seed));
         }
 
         /// <summary>An effect that multiplies one attribute, authored as the inspector would.</summary>
@@ -176,6 +204,36 @@ namespace CupkekGames.Combat.Tests
         public Vector3 AIColliderCenter => Vector3.zero;
     }
 
+    /// <summary>A fight's manager without a scene: no ultimate queue, no cameras, no crit feedback.</summary>
+    internal sealed class FakeCombatManager : ICombatManager
+    {
+        public readonly FakePopupManager Popups = new();
+
+        public FakeCombatManager(ICombatUnitManager field, EventDatabaseCombat events, CombatRandom random)
+        {
+            UnitManager = field;
+            EventDatabase = events;
+            Random = random;
+        }
+
+        public ICombatUnitManager UnitManager { get; }
+        public IPopupManager PopupManager => Popups;
+        public EventDatabaseCombat EventDatabase { get; }
+        public CombatUltimateManager CombatUltimateManager => null;
+        public CinemachineManager CinemachineManager => null;
+        public CancellationTokenSource CancelToken => null;
+        public CombatRandom Random { get; }
+        public void PlayCriticalEffect(CombatUnit attacker, Transform target) { }
+    }
+
+    /// <summary>Records the kind of every popup shown.</summary>
+    internal sealed class FakePopupManager : IPopupManager
+    {
+        public readonly List<string> Kinds = new();
+        public void Show(string kind, Vector3 center, int value = 0, IPopupContext context = null) => Kinds.Add(kind);
+        public void SetScaleMaxValue(float maxValue) { }
+    }
+
     /// <summary>A field with the given allies and enemies; time scale changes are recorded.</summary>
     internal sealed class FakeUnitManager : ICombatUnitManager
     {
@@ -187,7 +245,8 @@ namespace CupkekGames.Combat.Tests
         public ReadOnlyCollection<CombatUnit> CombatUnitsEnemy => Enemies.AsReadOnly();
         public void SetTimeScale(float timeScale, CombatUnit except) => TimeScales.Add(timeScale);
         public void Summon(CombatUnitReference unit, CombatUnit summoner) { }
-        public ICombatSpace Space { get; } = new FakeSpace();
+        public FakeSpace FakeSpace { get; } = new FakeSpace();
+        public ICombatSpace Space => FakeSpace;
         public ICombatTargeting Targeting { get; }
 
         public FakeUnitManager()
@@ -196,13 +255,27 @@ namespace CupkekGames.Combat.Tests
         }
     }
 
-    /// <summary>A space that measures between the views in metres (one combat unit is one metre) and covers nothing.</summary>
+    /// <summary>
+    /// A space that measures between the views in metres (one combat unit is one metre), covers
+    /// nothing, and grants every push in full (recording the last).
+    /// </summary>
     internal sealed class FakeSpace : ICombatSpace
     {
+        public CombatUnit LastPushed { get; private set; }
+        public int Pushes { get; private set; }
         public float Distance(CombatUnit a, CombatUnit b) => Vector3.Distance(a.View.transform.position, b.View.transform.position);
         public bool InRange(CombatUnit caster, CombatUnit target, float range) => Distance(caster, target) <= range;
         public int StepsToReach(CombatUnit caster, CombatUnit target, float range) => Mathf.Max(0, Mathf.CeilToInt(Distance(caster, target) - range));
         public void Collect(in CombatArea area, List<CombatUnit> results) => results.Clear();
+        public void CollectAround(CombatUnit center, int rings, List<CombatUnit> results) => results.Clear();
+        public void CollectLine(CombatUnit from, CombatUnit through, int length, List<CombatUnit> results) => results.Clear();
+
+        public int Push(CombatUnit unit, CombatUnit from, int tiles, float duration)
+        {
+            LastPushed = unit;
+            Pushes++;
+            return tiles;
+        }
         public CombatAreaMark ShowArea(in CombatArea area, Color color) => throw new System.NotSupportedException("The test world draws nothing.");
         public float ToWorld(float units) => units;
         public ICombatMover CreateMover(CombatUnitView view) => throw new System.NotSupportedException("The test world moves nothing.");

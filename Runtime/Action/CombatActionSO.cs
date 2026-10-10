@@ -23,11 +23,15 @@ namespace CupkekGames.Combat
     [SerializeReference]
     public CombatTargetSelection TargetSelection = new CombatTargetSelectionPrimaryTarget { Enemy = true };
 
-    /// <summary>Deals <paramref name="attack"/> to <paramref name="target"/> through crit, element and defense; the hit names <paramref name="source"/>.</summary>
+    /// <summary>
+    /// Deals <paramref name="attack"/> to <paramref name="target"/> through dodge, crit, element and
+    /// defense; the hit names <paramref name="source"/>. A proc's extra strike names its own crit
+    /// policy (a second strike that never crits).
+    /// </summary>
     public static void AttackTarget(ICombatSettings combatSettings, ICombatManager manager, CombatUnit attacker, float attack,
-      CombatUnit target, DamageTypeDefinitionSO damageType, CombatSource source)
+      CombatUnit target, DamageTypeDefinitionSO damageType, CombatSource source, CombatCritPolicy critPolicy = CombatCritPolicy.Roll)
     {
-      DamageResult result = CombatDamageCalculator.CalculateAttackDamage(combatSettings, attacker, target, attack, damageType, source, manager.Random);
+      DamageResult result = CombatDamageCalculator.CalculateAttackDamage(combatSettings, attacker, target, attack, damageType, source, manager.Random, critPolicy);
       CombatDamageCalculator.ApplyDamageAndVisuals(combatSettings, manager, attacker, target, result);
     }
 
