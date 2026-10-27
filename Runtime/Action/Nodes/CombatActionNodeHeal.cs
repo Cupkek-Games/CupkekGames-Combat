@@ -46,7 +46,7 @@ namespace CupkekGames.Combat
     {
     }
 
-    public string GetDescription(int skillLevel, CombatUnit caster, ICombatRules rules)
+    public string GetDescription(int skillLevel, CombatUnit caster, ICombatRules rules, CombatDescriptionStyleSO style)
     {
       AttributeModifier modifier = GetDamageValue(skillLevel);
       if (modifier == null)
@@ -55,7 +55,6 @@ namespace CupkekGames.Combat
         return "";
       }
 
-      CombatDescriptionStyleSO style = rules.DescriptionStyle;
       string number = _scaling == CombatValueScaling.TargetMaxHealth
         ? CombatActionNodeDamage.ShareNumber(style, style.Icon(CombatDescriptionRole.Heal), modifier)
         : CombatActionNodeDamage.ScaledNumber(style, style.Icon(CombatDescriptionRole.Heal), modifier, caster, _damageType);
@@ -65,7 +64,7 @@ namespace CupkekGames.Combat
       return style.Colorize(CombatDescriptionRole.Heal, text);
     }
 
-    public string GetDescriptionDuration(int skillLevel, CombatUnit caster, ICombatRules rules)
+    public string GetDescriptionDuration(int skillLevel, CombatUnit caster, ICombatRules rules, CombatDescriptionStyleSO style)
     {
       // Heal is instant; no duration text.
       return string.Empty;

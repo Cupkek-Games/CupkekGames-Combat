@@ -48,14 +48,14 @@ namespace CupkekGames.Combat
 
     }
 
-    public string GetDescription(int skillLevel, CombatUnit caster, ICombatRules rules)
+    public string GetDescription(int skillLevel, CombatUnit caster, ICombatRules rules, CombatDescriptionStyleSO style)
     {
       AttributeModifier modifier = GetDamageValue(skillLevel);
       string number = _scaling == CombatValueScaling.TargetMaxHealth
-        ? ShareNumber(rules.DescriptionStyle, _damageType.IconRichText, modifier)
-        : ScaledNumber(rules.DescriptionStyle, _damageType.IconRichText, modifier, caster, _damageType);
+        ? ShareNumber(style, _damageType.IconRichText, modifier)
+        : ScaledNumber(style, _damageType.IconRichText, modifier, caster, _damageType);
 
-      return $"{_damageType.RichTextColor}{number} {_damageType.DisplayName.ToLowerInvariant()} damage{CombatDescriptionStyleSO.CloseTag}";
+      return style.Colorize(_damageType, $"{number} {_damageType.DisplayName.ToLowerInvariant()} damage");
     }
 
     /// <summary>
@@ -88,7 +88,7 @@ namespace CupkekGames.Combat
       return flat != 0 ? $"{style.Number(string.Empty, flat)} + {share}" : share;
     }
 
-    public string GetDescriptionDuration(int skillLevel, CombatUnit caster, ICombatRules rules)
+    public string GetDescriptionDuration(int skillLevel, CombatUnit caster, ICombatRules rules, CombatDescriptionStyleSO style)
     {
       // Damage is instant; no duration text.
       return string.Empty;

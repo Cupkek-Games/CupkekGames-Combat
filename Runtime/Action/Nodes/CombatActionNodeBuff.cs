@@ -107,14 +107,17 @@ namespace CupkekGames.Combat
     {
     }
 
-    public string GetDescription(int skillLevel, CombatUnit caster, ICombatRules rules)
+    public string GetDescription(int skillLevel, CombatUnit caster, ICombatRules rules, CombatDescriptionStyleSO style)
     {
-      return DescribeEffect(GetAttributeDataEffect(skillLevel), rules.AttributeDisplayConfig);
+      // A buff fragment uses no role colour or icon, so it needs no style:
+      // without one it reads the rules' display config.
+      AttributeDisplayConfigSO displayConfig = style != null ? style.GetAttributeDisplayConfig(rules) : rules.AttributeDisplayConfig;
+      return DescribeEffect(GetAttributeDataEffect(skillLevel), displayConfig);
     }
 
-    public string GetDescriptionDuration(int skillLevel, CombatUnit caster, ICombatRules rules)
+    public string GetDescriptionDuration(int skillLevel, CombatUnit caster, ICombatRules rules, CombatDescriptionStyleSO style)
     {
-      return CombatActionNodeStatusEffect.DescribeDuration(GetDuration(skillLevel), rules.DescriptionStyle);
+      return CombatActionNodeStatusEffect.DescribeDuration(GetDuration(skillLevel), style);
     }
 
     /// <summary>

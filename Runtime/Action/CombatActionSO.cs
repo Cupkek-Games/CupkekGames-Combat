@@ -67,16 +67,20 @@ namespace CupkekGames.Combat
     /// The authored description with every placeholder resolved: {nodeN} and
     /// {nodeN_dur} ask the node at that index for its fragment, {skillLevel}
     /// and {range} are literal. Fragments are coloured and iconed through
-    /// <see cref="ICombatRules.DescriptionStyle"/>; with a caster the numbers
-    /// include that unit's attribute scaling.
+    /// <paramref name="style"/>, the style of the surface the text is read on;
+    /// null takes <see cref="ICombatRules.DescriptionStyle"/>, the default
+    /// surface. With a caster the numbers include that unit's attribute
+    /// scaling.
     /// </summary>
-    public string GetDescription(int skillLevel, ICombatRules rules, CombatUnit caster = null)
+    public string GetDescription(int skillLevel, ICombatRules rules, CombatUnit caster = null,
+      CombatDescriptionStyleSO style = null)
     {
-      return ReplacePlaceholders(Description, Nodes, skillLevel, caster, rules, TargetSelection);
+      CombatDescriptionStyleSO surface = style != null ? style : rules.DescriptionStyle;
+      return ReplacePlaceholders(Description, Nodes, skillLevel, caster, rules, surface, TargetSelection);
     }
 
     public static string ReplacePlaceholders(string input, IReadOnlyList<GraphNodeSO> nodes, int skillLevel,
-      CombatUnit caster, ICombatRules rules, CombatTargetSelection TargetSelection)
+      CombatUnit caster, ICombatRules rules, CombatDescriptionStyleSO style, CombatTargetSelection TargetSelection)
     {
       string result = NodePlaceholderRegex.Replace(input, match =>
       {
@@ -85,7 +89,7 @@ namespace CupkekGames.Combat
           var node = nodes[index];
           if (node is ICombatActionNodeDescription describable)
           {
-            return describable.GetDescription(skillLevel, caster, rules);
+            return describable.GetDescription(skillLevel, caster, rules, style);
           }
         }
 
@@ -99,7 +103,7 @@ namespace CupkekGames.Combat
           var node = nodes[index];
           if (node is ICombatActionNodeDescription describable)
           {
-            return describable.GetDescriptionDuration(skillLevel, caster, rules);
+            return describable.GetDescriptionDuration(skillLevel, caster, rules, style);
           }
         }
 

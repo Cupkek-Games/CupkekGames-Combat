@@ -49,9 +49,8 @@ namespace CupkekGames.Combat
     {
     }
 
-    public string GetDescription(int skillLevel, CombatUnit caster, ICombatRules rules)
+    public string GetDescription(int skillLevel, CombatUnit caster, ICombatRules rules, CombatDescriptionStyleSO style)
     {
-      CombatDescriptionStyleSO style = rules.DescriptionStyle;
       string name = _statusEffectSO.Name.ToLowerInvariant();
       if (_statusEffectSO.HasTier)
       {
@@ -61,9 +60,9 @@ namespace CupkekGames.Combat
       return style.Colorize(CombatDescriptionRole.Status, style.Icon(CombatDescriptionRole.Status) + name);
     }
 
-    public string GetDescriptionDuration(int skillLevel, CombatUnit caster, ICombatRules rules)
+    public string GetDescriptionDuration(int skillLevel, CombatUnit caster, ICombatRules rules, CombatDescriptionStyleSO style)
     {
-      return DescribeDuration(GetDuration(skillLevel), rules.DescriptionStyle);
+      return DescribeDuration(GetDuration(skillLevel), style);
     }
 
     /// <summary>"5 seconds" in the duration colour, with its icon when authored.</summary>

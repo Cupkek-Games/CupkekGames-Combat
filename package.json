@@ -1,14 +1,14 @@
 {
   "name": "com.cupkekgames.combat",
   "displayName": "CupkekGames Combat",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "author": {
     "name": "CupkekGames",
     "url": "https://www.docs.cupkek.games"
   },
   "unity": "6000.5",
   "documentationUrl": "https://docs.cupkek.games/",
-  "description": "Turn-based combat framework: CombatUnit (Health/Mana/Buffs/Shield/AI), CombatActionSO + action node behaviour-trees (Damage/Heal/Shield/StatusEffect/Projectile/Indicator) with data-driven descriptions (CombatDescriptionStyleSO), CombatAttributeRegistrySO + AttributeSet, target selection, status effects, projectiles, threat table, ICombatRules + ICombatSettings extension hooks.",
+  "description": "Turn-based combat framework: CombatUnit (Health/Mana/Buffs/Shield/AI), CombatActionSO + action node behaviour-trees (Damage/Heal/Shield/StatusEffect/Projectile/Indicator) with data-driven descriptions (CombatDescriptionStyleSO, one per surface), CombatAttributeRegistrySO + AttributeSet, target selection, status effects, projectiles, threat table, ICombatRules + ICombatSettings extension hooks.",
   "keywords": [
     "Combat",
     "TurnBased",
@@ -25,7 +25,7 @@
     "com.cupkekgames.data": "0.4.1",
     "com.cupkekgames.fadeables": "0.2.2",
     "com.cupkekgames.graphs": "0.5.1",
-    "com.cupkekgames.inventory": "0.4.7",
+    "com.cupkekgames.inventory": "0.4.8",
     "com.cupkekgames.keyvaluedatabases": "0.3.0",
     "com.cupkekgames.luna": "2.0.0",
     "com.cupkekgames.pool": "0.1.2",

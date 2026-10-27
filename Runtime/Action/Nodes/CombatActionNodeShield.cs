@@ -119,20 +119,19 @@ namespace CupkekGames.Combat
     {
     }
 
-    public string GetDescription(int skillLevel, CombatUnit caster, ICombatRules rules)
+    public string GetDescription(int skillLevel, CombatUnit caster, ICombatRules rules, CombatDescriptionStyleSO style)
     {
       AttributeModifier modifier = GetDamageValue(skillLevel);
-      CombatDescriptionStyleSO style = rules.DescriptionStyle;
       string number = CombatActionNodeDamage.ScaledNumber(style, style.Icon(CombatDescriptionRole.Shield), modifier, caster, _damageType);
       string shield = style.Colorize(CombatDescriptionRole.Shield, $"grants {number} shield");
 
-      string buff = CombatActionNodeBuff.DescribeEffect(GetAttributeDataEffect(skillLevel), rules.AttributeDisplayConfig);
+      string buff = CombatActionNodeBuff.DescribeEffect(GetAttributeDataEffect(skillLevel), style.GetAttributeDisplayConfig(rules));
       return string.IsNullOrEmpty(buff) ? shield : $"{shield} and {buff}";
     }
 
-    public string GetDescriptionDuration(int skillLevel, CombatUnit caster, ICombatRules rules)
+    public string GetDescriptionDuration(int skillLevel, CombatUnit caster, ICombatRules rules, CombatDescriptionStyleSO style)
     {
-      return CombatActionNodeStatusEffect.DescribeDuration(GetDuration(skillLevel), rules.DescriptionStyle);
+      return CombatActionNodeStatusEffect.DescribeDuration(GetDuration(skillLevel), style);
     }
   }
 }

@@ -17,7 +17,9 @@ namespace CupkekGames.Combat
         // Attribute Display
         AttributeDisplayConfigSO AttributeDisplayConfig { get; }
 
-        // Skill description colours, inline icons, number format
+        // Skill description colours, inline icons, number format on the default
+        // surface; a screen on another surface passes its own style to
+        // CombatActionSO.GetDescription
         CombatDescriptionStyleSO DescriptionStyle { get; }
 
         // Damage modifiers (empty by default — games add custom modifiers)

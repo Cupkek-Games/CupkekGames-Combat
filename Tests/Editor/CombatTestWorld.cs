@@ -169,10 +169,10 @@ namespace CupkekGames.Combat.Tests
     {
         public CombatAttributeRegistrySO Attributes { get; set; }
         public ElementRelationshipTableSO ElementRelationshipTable { get; set; }
+        public AttributeDisplayConfigSO AttributeDisplayConfig { get; set; }
+        public CombatDescriptionStyleSO DescriptionStyle { get; set; }
 
         public int AttackSpeedBase => 1000;
-        public AttributeDisplayConfigSO AttributeDisplayConfig => null;
-        public CombatDescriptionStyleSO DescriptionStyle => null;
         public IReadOnlyList<IDamageModifier> DamageModifiers { get; } = new List<IDamageModifier>();
         public float GetDamageTakenMultiplier(float totalDefense) => 1f;
         public float GetBaseValue(AttributeDefinitionSO attribute) => 0f;
