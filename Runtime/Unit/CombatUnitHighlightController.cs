@@ -201,8 +201,8 @@ namespace CupkekGames.Combat
                 _fadeableOutline.RemoveOutline();
             }
 
-            _fadeableOutline._outlineIndex = FadeableOutlineIndex;
-            _fadeableOutline._removeOnOther = true; // Ensure per-object outline control, not shared width
+            _fadeableOutline.SetBaseIndex(FadeableOutlineIndex);
+            _fadeableOutline.RemoveOnOther = true; // Ensure per-object outline control, not shared width
 
             // Configure hover feel (FadeableOutlineSize copies these into the underlying controller fade).
             _fadeableOutline.Fadeable._in = _fadeableOutlineWidth;
