@@ -234,16 +234,15 @@ namespace CupkekGames.Combat.Tests
         public void SetScaleMaxValue(float maxValue) { }
     }
 
-    /// <summary>A field with the given allies and enemies; time scale changes are recorded.</summary>
+    /// <summary>A field with the given allies and enemies; unit holds are real layers.</summary>
     internal sealed class FakeUnitManager : ICombatUnitManager
     {
         public readonly List<CombatUnit> Allies = new();
         public readonly List<CombatUnit> Enemies = new();
-        public readonly List<float> TimeScales = new();
 
         public ReadOnlyCollection<CombatUnit> CombatUnitsAlly => Allies.AsReadOnly();
         public ReadOnlyCollection<CombatUnit> CombatUnitsEnemy => Enemies.AsReadOnly();
-        public void SetTimeScale(float timeScale, CombatUnit except) => TimeScales.Add(timeScale);
+        public System.IDisposable HoldUnits(object owner, IEnumerable<CombatUnit> units, float scale) => new CombatUnitTimeHold(owner, units, scale);
         public void Summon(CombatUnitReference unit, CombatUnit summoner) { }
         public FakeSpace FakeSpace { get; } = new FakeSpace();
         public ICombatSpace Space => FakeSpace;

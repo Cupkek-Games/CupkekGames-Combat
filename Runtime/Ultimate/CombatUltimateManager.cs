@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using CupkekGames.TimeSystem;
@@ -14,13 +15,17 @@ namespace CupkekGames.Combat
         private ICombatUnitManager _combatUnitManager;
         private SceneSpotlight _spotlight;
         private Queue<CombatUnit> _combatUnits = new();
-        private bool _effectsActive = false;
+        // The freeze is two layers this manager owns: one on global time, one on every unit but the
+        // caster. Other holders' layers (a potion's aim, a staged take) stay untouched.
+        private IDisposable _globalFreeze;
+        private IDisposable _unitFreeze;
 
         /// <summary>
         /// An ultimate's freeze is on: global time stands still for everyone but
         /// its caster, from the moment it is selected (its queue turn) to its end.
+        /// A unit that falls during the freeze leaves it at once.
         /// </summary>
-        public bool EffectsActive => _effectsActive;
+        public bool EffectsActive => _unitFreeze != null;
 
         public bool HasNext => _combatUnits.Count > 0;
 
@@ -80,23 +85,28 @@ namespace CupkekGames.Combat
 
         public void StopEffects()
         {
-            if (_effectsActive)
-            {
-                _effectsActive = false;
-                _timeManager.Global.TimeScale = 1f;
-                _combatUnitManager.SetTimeScale(1f, null);
+            if (!EffectsActive) return;
 
-                _spotlight?.ClearSpotlight();
-            }
+            ReleaseFreeze();
+            _spotlight?.ClearSpotlight();
+        }
+
+        private void ReleaseFreeze()
+        {
+            _globalFreeze?.Dispose();
+            _globalFreeze = null;
+            _unitFreeze?.Dispose();
+            _unitFreeze = null;
         }
 
         private void ActivateEffects(CombatUnit combatUnit)
         {
-            _effectsActive = true;
-            combatUnit.TimeBundle.TimeContext.TimeScale = 1f;
-
-            _timeManager.Global.TimeScale = 0f;
-            _combatUnitManager.SetTimeScale(0f, combatUnit);
+            // A caster next in the queue takes the freeze over: the last one's layers go first, so
+            // the new caster runs and the last one freezes with the rest.
+            ReleaseFreeze();
+            _globalFreeze = _timeManager.Global.Scale(this, 0f);
+            _unitFreeze = _combatUnitManager.HoldUnits(this,
+                _combatUnitManager.CombatUnitsAlly.Concat(_combatUnitManager.CombatUnitsEnemy).Where(unit => unit != combatUnit), 0f);
 
             // Everything darkens but the caster and the effects. A caster next in the queue takes
             // the spotlight over from the last one; its renderers are read now (an accessory

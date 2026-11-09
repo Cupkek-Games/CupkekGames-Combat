@@ -4,7 +4,6 @@ namespace CupkekGames.Combat
 {
     public interface IDamageModifier
     {
-        int Order { get; }
         float ModifyRawDamage(float damage, CombatUnit attacker, CombatUnit target, DamageContext ctx);
         int ModifyFinalDamage(int damage, CombatUnit attacker, CombatUnit target, DamageContext ctx);
     }
