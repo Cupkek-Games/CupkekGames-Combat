@@ -24,6 +24,8 @@ namespace CupkekGames.Combat
         public string Key { get => _unit.Key; set => _unit.Key = value; }
 
         public void AddFeature(IUnitFeature feature) => _unit.AddFeature(feature);
+        /// <summary>Takes a feature off the unit; like <see cref="AddFeature"/>, it calls no lifecycle hooks. For transient fight-time features.</summary>
+        public bool RemoveFeature(IUnitFeature feature) => _unit.Features.Remove(feature);
         public T GetFeature<T>() where T : class, IUnitFeature => _unit.GetFeature<T>();
         public bool HasFeature<T>() where T : class, IUnitFeature => _unit.HasFeature<T>();
         public IReadOnlyList<IUnitFeature> Features => _unit.Features;
