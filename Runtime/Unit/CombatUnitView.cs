@@ -79,8 +79,12 @@ namespace CupkekGames.Combat
 
     public virtual void OnDisable()
     {
-      // A hit's squash still running on a body that leaves (despawned, or the fight torn down).
-      if (_animationController != null) SquashAndStretch.Stop(_animationController.Transform);
+      // A hit's squash or nudge still running on a body that leaves (despawned, or the fight torn down).
+      if (_animationController != null)
+      {
+        SquashAndStretch.Stop(_animationController.Transform);
+        Recoil.Stop(_animationController.Transform);
+      }
 
       UnRegisterCombatUnit();
     }
@@ -197,10 +201,34 @@ namespace CupkekGames.Combat
 
     public void TakeDamageSquashAndStretch(float bumpAmount)
     {
+      TakeDamageSquashAndStretch(bumpAmount, 0.3f);
+    }
+
+    /// <summary>
+    /// A hit's squash over <paramref name="seconds"/>: a quick squash, a stretch and a longer settle (a fifth, a
+    /// third and the rest of it).
+    /// </summary>
+    public void TakeDamageSquashAndStretch(float bumpAmount, float seconds)
+    {
       if (_animationController != null)
       {
-        SquashAndStretch.TakeDamage(_animationController.Transform, bumpAmount, 0.1f);
+        SquashAndStretch.TakeDamage(_animationController.Transform, bumpAmount, seconds * 0.2f, seconds * 0.3f,
+          seconds * 0.5f);
       }
+    }
+
+    /// <summary>
+    /// A hit's nudge: the model pushed <paramref name="distance"/> away from <paramref name="from"/> (along the
+    /// ground) and springing back, over <paramref name="seconds"/>. The model moves, not the unit, so its walking and
+    /// its animations are left alone.
+    /// </summary>
+    public void TakeDamageNudge(Vector3 from, float distance, float seconds)
+    {
+      if (_animationController == null) return;
+      Vector3 away = transform.position - from;
+      away.y = 0f;
+      if (away.sqrMagnitude < 0.0001f) return;
+      Recoil.Push(_animationController.Transform, away.normalized * distance, seconds * 0.3f, seconds * 0.7f);
     }
 
     /// <summary>

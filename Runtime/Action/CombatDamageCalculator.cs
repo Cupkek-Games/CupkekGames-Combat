@@ -228,12 +228,27 @@ namespace CupkekGames.Combat
                 result.Damage,
                 PopupContext(target));
 
+            // A bright frame first (when the game asks for one), then the hit colour, held and eased out.
+            if (visualSettings.HitPopWeight > 0 && visualSettings.HitPopDurationMS > 0)
+            {
+                view.ShaderColorController
+                  .AddColor(visualSettings.HitPopColor, visualSettings.HitPopWeight, visualSettings.HitPopDurationMS).Forget();
+                view.ShaderEmissionController
+                  .AddColor(visualSettings.HitPopColorEmission, visualSettings.HitPopWeight, visualSettings.HitPopDurationMS).Forget();
+            }
             view.ShaderColorController
-              .AddColor(visualSettings.HitColor, visualSettings.HitColorWeight, visualSettings.HitColorDurationMS).Forget();
+              .AddColorFading(visualSettings.HitColor, visualSettings.HitColorWeight, visualSettings.HitColorDurationMS,
+                visualSettings.HitColorFadeMS).Forget();
             view.ShaderEmissionController
-              .AddColor(visualSettings.HitColorEmission, visualSettings.HitColorWeight, visualSettings.HitColorDurationMS).Forget();
+              .AddColorFading(visualSettings.HitColorEmission, visualSettings.HitColorWeight,
+                visualSettings.HitColorDurationMS, visualSettings.HitColorFadeMS).Forget();
 
-            view.TakeDamageSquashAndStretch(visualSettings.HitSquashAndStretchBumpAmount);
+            view.TakeDamageSquashAndStretch(visualSettings.HitSquashAndStretchBumpAmount, visualSettings.HitSquashSeconds);
+            if (visualSettings.HitNudgeDistance > 0f && attacker?.View != null)
+            {
+                view.TakeDamageNudge(attacker.View.transform.position, visualSettings.HitNudgeDistance,
+                    visualSettings.HitNudgeSeconds);
+            }
 
             if (result.IsCrit)
             {
