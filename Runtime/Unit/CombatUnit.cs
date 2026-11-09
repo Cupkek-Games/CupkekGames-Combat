@@ -101,6 +101,9 @@ namespace CupkekGames.Combat
         private TimeBundle _timeBundle;
         public TimeBundle TimeBundle => _timeBundle;
 
+        // Dispose ran since the last Initialize: Release does not end the features twice.
+        private bool _disposed;
+
 
         public CombatUnit(CombatUnitReference combatUnitReference, ICombatSettings combatSettings, IUnitSOProvider unitSOProvider, TimeManager timeManager, UnitDefinitionSO data = null)
         {
@@ -124,6 +127,7 @@ namespace CupkekGames.Combat
             PowerLevel = new CombatUnitPowerLevel(this, _combatSettings);
 
             Shield = new CombatUnitShield(this);
+            _disposed = false;
 
             if (_dataReference != null && _data == null)
             {
@@ -423,9 +427,21 @@ namespace CupkekGames.Combat
         /// <summary>Clean up features and sub-systems. Call when unit is no longer needed (combat end, scene unload).</summary>
         public void Dispose()
         {
+            _disposed = true;
             _unit.Dispose();
             Buffs?.DisposeAll();
             KillAI();
+        }
+
+        /// <summary>
+        /// End of life, for the unit's owner: disposes it if that has not happened yet, then its
+        /// clock leaves the TimeManager. A death only disposes, so the falling view and its
+        /// effects keep their clock while they fade.
+        /// </summary>
+        public void Release()
+        {
+            if (!_disposed) Dispose();
+            _timeBundle.Dispose();
         }
 
         public void OnDeath()
