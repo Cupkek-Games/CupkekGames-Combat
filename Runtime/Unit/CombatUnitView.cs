@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using CupkekGames.Animations;
 using CupkekGames.Services;
+using CupkekGames.TimeSystem;
 using CupkekGames.VFX;
 using CupkekGames.Character;
 using CupkekGames.Units;
@@ -184,6 +185,15 @@ namespace CupkekGames.Combat
       if (gameObject == null)
       {
         return;
+      }
+
+      // The fall runs on the fallen unit's clock, so a freeze it died in lets go of the fall at
+      // once (CombatUnitTimeHold releases the fallen); OnDisable unbinds it when the body goes.
+      if (_animationTimeController != null)
+      {
+        TimeContext clock = combatUnit.TimeBundle.TimeContext;
+        _animationTimeController.RegisterTimeContext(clock);
+        _animationTimeController.SetPlaySpeed(clock.TimeScale);
       }
 
       _animationController?.Play(AnimationKinds.Death);
