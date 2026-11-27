@@ -196,9 +196,9 @@ namespace CupkekGames.Combat
         }
 
         public CombatActionSO GetCombatAction(int actionType, ICombatManager manager, CombatUnit caster,
-            CombatUnit primaryTarget)
+            CombatUnit primaryTarget, CombatActionSO previous = null)
         {
-            return CombatData?.GetCombatAction(actionType, manager, caster, primaryTarget);
+            return CombatData?.GetCombatAction(actionType, manager, caster, primaryTarget, previous);
         }
 
         public void RegisterView(CombatUnitView view)

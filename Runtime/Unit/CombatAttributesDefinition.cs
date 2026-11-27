@@ -58,16 +58,20 @@ namespace CupkekGames.Combat
         /// <summary>
         /// The action of <paramref name="actionType"/> the unit takes next: of the slot's
         /// actions that can ever pick someone (<see cref="CombatTargetSelection.CanSelectAnyone"/>),
-        /// the one most useful now, ties by the fight's random. Null when the slot has none.
+        /// the one most useful now, ties by the fight's random. A tie passes over
+        /// <paramref name="previous"/> (the action the unit took last), so equal moves take turns
+        /// instead of repeating. Null when the slot has none.
         /// </summary>
-        public CombatActionSO GetCombatAction(int actionType, ICombatManager manager, CombatUnit caster, CombatUnit enemy)
+        public CombatActionSO GetCombatAction(int actionType, ICombatManager manager, CombatUnit caster, CombatUnit enemy,
+            CombatActionSO previous = null)
         {
             List<CombatActionSO> actions = GetActions(actionType);
             if (actions == null) return null;
-            return SelectAction(actions, manager, caster, enemy);
+            return SelectAction(actions, manager, caster, enemy, previous);
         }
 
-        private CombatActionSO SelectAction(List<CombatActionSO> list, ICombatManager manager, CombatUnit caster, CombatUnit enemy)
+        private CombatActionSO SelectAction(List<CombatActionSO> list, ICombatManager manager, CombatUnit caster, CombatUnit enemy,
+            CombatActionSO previous)
         {
             CombatActionSO only = null;
             int castable = 0;
@@ -101,6 +105,7 @@ namespace CupkekGames.Combat
             }
 
             if (best.Count == 0) return null;
+            if (best.Count > 1 && previous != null) best.Remove(previous);
             return best[manager.Random.Range(0, best.Count)];
         }
 

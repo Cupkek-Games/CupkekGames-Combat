@@ -40,6 +40,8 @@ namespace CupkekGames.Combat
     private int _actionType;
     // The action selected for the current run (reported with the ultimate's phases).
     private CombatActionSO _action;
+    // The action it took last: a slot's next pick passes it over when another ties with it.
+    private CombatActionSO _lastAction;
     // The selected ultimate has begun to cast (a silence no longer drops it).
     private bool _ultimateStarted;
 
@@ -220,6 +222,7 @@ namespace CupkekGames.Combat
       int skillLevel = _caster.EffectiveSkillRank;
 
       _action = action;
+      _lastAction = action;
       _runner = _caster.View.Runners[action];
 
       // A fresh source per run: every hit of this run names it.
@@ -356,11 +359,11 @@ namespace CupkekGames.Combat
     {
       int normal = _combatSettings.DefaultActionTypeId;
       _actionType = _silenced || !_caster.CanCastUltimate ? normal : _caster.Mana.GetNextActionType();
-      CombatActionSO action = _caster.GetCombatAction(_actionType, _combatManager, _caster, _primaryTarget);
+      CombatActionSO action = _caster.GetCombatAction(_actionType, _combatManager, _caster, _primaryTarget, _lastAction);
       if (action == null && _actionType != normal)
       {
         _actionType = normal;
-        action = _caster.GetCombatAction(normal, _combatManager, _caster, _primaryTarget);
+        action = _caster.GetCombatAction(normal, _combatManager, _caster, _primaryTarget, _lastAction);
       }
 
       return action ?? throw new InvalidOperationException($"[CombatUnitAI] '{_caster.DataReference.Key}' has no action that can pick anyone in its normal slot ({normal}).");

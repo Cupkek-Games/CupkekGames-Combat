@@ -34,7 +34,9 @@ namespace CupkekGames.Combat
         // NOTE: VFXBundle is using caster.TimeBundle for now as it is default and most desired behavior
         // If there is a need to use target.TimeBundle, we can add a parameter
 
-        _vfxBundle.Play(go, go.transform.position, go.transform.rotation, ctx.CombatCancelToken, ctx.Caster.TimeBundle)
+        // A spawned effect plays out even when the fight ends under it (the killing blow keeps its slash); it goes
+        // only with the unit it plays on.
+        _vfxBundle.Play(go, go.transform.position, go.transform.rotation, target.View.destroyCancellationToken, ctx.Caster.TimeBundle)
           .Forget();
       }
 
