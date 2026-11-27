@@ -5,6 +5,7 @@ using CupkekGames.Services;
 using CupkekGames.TimeSystem;
 using CupkekGames.VFX;
 using CupkekGames.Character;
+using CupkekGames.Holds;
 using CupkekGames.Units;
 
 namespace CupkekGames.Combat
@@ -53,6 +54,12 @@ namespace CupkekGames.Combat
       new Dictionary<CombatActionSO, CombatActionRunner>();
 
     public Dictionary<CombatActionSO, CombatActionRunner> Runners => _runners;
+
+    /// <summary>
+    /// While held, a won fight leaves the unit in its idle instead of its win pose (a scene that ends on the unit at
+    /// rest).
+    /// </summary>
+    public HoldSet QuietWin { get; } = new HoldSet();
 
     protected override void Awake()
     {
@@ -206,7 +213,7 @@ namespace CupkekGames.Combat
         return;
       }
 
-      _animationController.Play(AnimationKinds.Win);
+      _animationController.Play(QuietWin.IsHeld ? AnimationKinds.Idle : AnimationKinds.Win);
     }
 
     public void TakeDamageSquashAndStretch(float bumpAmount)

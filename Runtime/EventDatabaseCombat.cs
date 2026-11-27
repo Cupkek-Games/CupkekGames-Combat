@@ -30,6 +30,12 @@ namespace CupkekGames.Combat
     /// <summary>An ultimate was selected, then completed or cancelled (once each).</summary>
     public event Action<CombatUnit, CombatActionSO, UltimatePhase> OnUltimate;
 
+    /// <summary>
+    /// A unit's action starts running (its first tick, so its wind-up starts now): the caster, the action and its
+    /// type (a <see cref="CombatActionType"/> value). An ultimate starts at its queue turn, after <see cref="UltimatePhase.Selected"/>.
+    /// </summary>
+    public event Action<CombatUnit, CombatActionSO, int> OnActionStarted;
+
     /// <summary>An action's hit missed: the attacker (null when nobody), the unit that dodged, the hit's source.</summary>
     public event Action<CombatUnit, CombatUnit, CombatSource> OnMiss;
 
@@ -61,6 +67,7 @@ namespace CupkekGames.Combat
     }
 
     public void InvokeOnUltimate(CombatUnit caster, CombatActionSO action, UltimatePhase phase) => OnUltimate?.Invoke(caster, action, phase);
+    public void InvokeOnActionStarted(CombatUnit caster, CombatActionSO action, int type) => OnActionStarted?.Invoke(caster, action, type);
 
     private void RaiseHit(CombatUnit unit, CombatHit hit) => OnHit?.Invoke(unit, hit);
     private void RaiseShieldEnded(CombatUnitShieldNode shield) => OnShieldEnded?.Invoke(shield.Owner, shield);

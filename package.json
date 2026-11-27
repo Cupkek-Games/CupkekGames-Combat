@@ -1,7 +1,7 @@
 {
   "name": "com.cupkekgames.combat",
   "displayName": "CupkekGames Combat",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "author": {
     "name": "CupkekGames",
     "url": "https://www.docs.cupkek.games"
@@ -25,6 +25,7 @@
     "com.cupkekgames.data": "0.5.0",
     "com.cupkekgames.fadeables": "0.2.2",
     "com.cupkekgames.graphs": "0.5.2",
+    "com.cupkekgames.holds": "0.1.0",
     "com.cupkekgames.inventory": "0.4.10",
     "com.cupkekgames.keyvaluedatabases": "0.3.0",
     "com.cupkekgames.luna": "2.0.0",

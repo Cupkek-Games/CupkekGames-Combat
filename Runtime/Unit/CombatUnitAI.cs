@@ -44,6 +44,8 @@ namespace CupkekGames.Combat
     private CombatActionSO _lastAction;
     // The selected ultimate has begun to cast (a silence no longer drops it).
     private bool _ultimateStarted;
+    // The current run has had its first tick (OnActionStarted is told once per run).
+    private bool _runStarted;
 
     private float _cooldown = 0;
 
@@ -223,6 +225,7 @@ namespace CupkekGames.Combat
 
       _action = action;
       _lastAction = action;
+      _runStarted = false;
       _runner = _caster.View.Runners[action];
 
       // A fresh source per run: every hit of this run names it.
@@ -285,6 +288,13 @@ namespace CupkekGames.Combat
     private void ExecuteCurrentAction(float deltaTime)
     {
       if (_actionType == CombatActionType.Ultimate) _ultimateStarted = true;
+      if (!_runStarted)
+      {
+        _runStarted = true;
+        _combatManager.EventDatabase.InvokeOnActionStarted(_caster, _action, _actionType);
+        // A listener may have stopped the unit.
+        if (_runner == null) return;
+      }
 
       CombatActionSO done = _action;
       BTNodeRuntimeState state = _runner.UpdateTree(_combatManager.UnitManager, _primaryTarget, deltaTime, _debug);
