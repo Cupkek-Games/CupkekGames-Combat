@@ -1,7 +1,7 @@
 {
   "name": "com.cupkekgames.combat",
   "displayName": "CupkekGames Combat",
-  "version": "0.9.6",
+  "version": "0.9.7",
   "author": {
     "name": "CupkekGames",
     "url": "https://www.docs.cupkek.games"
@@ -21,7 +21,7 @@
     "com.cupkekgames.audio": "0.2.2",
     "com.cupkekgames.behaviourtrees": "0.3.2",
     "com.cupkekgames.cameras": "0.4.0",
-    "com.cupkekgames.character": "0.7.1",
+    "com.cupkekgames.character": "0.7.2",
     "com.cupkekgames.data": "0.5.0",
     "com.cupkekgames.fadeables": "0.2.2",
     "com.cupkekgames.graphs": "0.5.2",
