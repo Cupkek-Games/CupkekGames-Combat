@@ -185,9 +185,26 @@ namespace CupkekGames.Combat
       }
     }
 
+    // The view stays bound through the fall, so whoever hears the fight-wide death sees the body; the pool's
+    // return unregisters it. The collider, the AI and the win go now.
     private void OnDeath(CombatUnit combatUnit)
     {
-      UnRegisterCombatUnit();
+      if (_collider != null)
+      {
+        _collider.enabled = false;
+      }
+
+      if (_combatUnitAI != null && _combatUnitAI.IsSetup)
+      {
+        _combatUnitAI.StopAI(true);
+      }
+
+      if (_eventDatabaseCombat != null)
+      {
+        _eventDatabaseCombat.WinEvent -= OnWin;
+      }
+
+      combatUnit.OnDeathEvent -= OnDeath;
 
       if (gameObject == null)
       {
@@ -213,7 +230,8 @@ namespace CupkekGames.Combat
         return;
       }
 
-      _animationController.Play(QuietWin.IsHeld ? AnimationKinds.Idle : AnimationKinds.Win);
+      // After the current one-shot: the killing swing lands before the win pose.
+      _animationController.PlayAfterCurrent(QuietWin.IsHeld ? AnimationKinds.Idle : AnimationKinds.Win);
     }
 
     public void TakeDamageSquashAndStretch(float bumpAmount)

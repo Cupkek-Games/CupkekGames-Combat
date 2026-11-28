@@ -8,6 +8,12 @@ namespace CupkekGames.Combat
         // Core combat formula inputs
         int AttackSpeedBase { get; }
 
+        /// <summary>
+        /// A slot's tied actions take turns (the action taken last is passed over when another ties with it)
+        /// instead of the fight's random breaking the tie. Off, ties roll as before.
+        /// </summary>
+        bool AlternateTiedActions { get; }
+
         // Element System
         ElementRelationshipTableSO ElementRelationshipTable { get; }
 

@@ -15,6 +15,12 @@ namespace CupkekGames.Combat
     public event Action WinEvent;
     public event Action LoseEvent;
 
+    /// <summary>
+    /// The fight is decided (true: won), raised once at the last fall, before <see cref="WinEvent"/> or
+    /// <see cref="LoseEvent"/> and before anything the end shows. Listeners read this, never count units.
+    /// </summary>
+    public event Action<bool> Decided;
+
     // Unit lifecycle events (unified — consumers check CombatUnit.TeamId)
     public event Action<CombatUnit> OnUnitSpawned;
     public event Action<CombatUnit> OnUnitDeath;
@@ -27,14 +33,8 @@ namespace CupkekGames.Combat
     /// </summary>
     public event Action<CombatUnit, CombatHit> OnHit;
 
-    /// <summary>An ultimate was selected, then completed or cancelled (once each).</summary>
+    /// <summary>An ultimate was selected, started (its queue turn), then completed or cancelled (once each).</summary>
     public event Action<CombatUnit, CombatActionSO, UltimatePhase> OnUltimate;
-
-    /// <summary>
-    /// A unit's action starts running (its first tick, so its wind-up starts now): the caster, the action and its
-    /// type (a <see cref="CombatActionType"/> value). An ultimate starts at its queue turn, after <see cref="UltimatePhase.Selected"/>.
-    /// </summary>
-    public event Action<CombatUnit, CombatActionSO, int> OnActionStarted;
 
     /// <summary>An action's hit missed: the attacker (null when nobody), the unit that dodged, the hit's source.</summary>
     public event Action<CombatUnit, CombatUnit, CombatSource> OnMiss;
@@ -54,6 +54,7 @@ namespace CupkekGames.Combat
     public void InvokePauseEvent() => PauseEvent?.Invoke();
     public void InvokeWaveClearEvent() => WaveClearEvent?.Invoke();
     public void InvokeNextWaveEvent() => NextWaveEvent?.Invoke();
+    public void InvokeDecided(bool win) => Decided?.Invoke(win);
     public void InvokeWinEvent() => WinEvent?.Invoke();
     public void InvokeLoseEvent() => LoseEvent?.Invoke();
     public void InvokeOnUnitSpawned(CombatUnit unit)
@@ -67,7 +68,6 @@ namespace CupkekGames.Combat
     }
 
     public void InvokeOnUltimate(CombatUnit caster, CombatActionSO action, UltimatePhase phase) => OnUltimate?.Invoke(caster, action, phase);
-    public void InvokeOnActionStarted(CombatUnit caster, CombatActionSO action, int type) => OnActionStarted?.Invoke(caster, action, type);
 
     private void RaiseHit(CombatUnit unit, CombatHit hit) => OnHit?.Invoke(unit, hit);
     private void RaiseShieldEnded(CombatUnitShieldNode shield) => OnShieldEnded?.Invoke(shield.Owner, shield);

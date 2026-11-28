@@ -173,6 +173,7 @@ namespace CupkekGames.Combat.Tests
         public CombatDescriptionStyleSO DescriptionStyle { get; set; }
 
         public int AttackSpeedBase => 1000;
+        public bool AlternateTiedActions => false;
         public IReadOnlyList<IDamageModifier> DamageModifiers { get; } = new List<IDamageModifier>();
         public float GetDamageTakenMultiplier(float totalDefense) => 1f;
         public float GetBaseValue(AttributeDefinitionSO attribute) => 0f;

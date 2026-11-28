@@ -8,6 +8,8 @@ namespace CupkekGames.Combat
     {
         /// <summary>Chosen at full mana and queued; the freeze, when it has one, starts at its queue turn.</summary>
         Selected,
+        /// <summary>Its queue turn came and its run began: the wind-up starts now.</summary>
+        Started,
         /// <summary>Cast to the end.</summary>
         Completed,
         /// <summary>Dropped before its end: stunned, silenced before it started, dead, or failed to find a target.</summary>

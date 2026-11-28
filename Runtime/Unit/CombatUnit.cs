@@ -213,28 +213,57 @@ namespace CupkekGames.Combat
             && _view.CombatUnitAI != null
             && _view.CombatUnitAI.IsRunning;
 
-        public void StopAI(bool dead, bool pauseAnimation)
+        /// <summary>
+        /// Stops the unit's AI. <paramref name="interrupt"/> cuts the clip its action plays (a stun, a pause); the
+        /// fight's end passes false, so the killing swing lands before the win pose.
+        /// </summary>
+        public void StopAI(bool dead, bool pauseAnimation, bool interrupt = true)
         {
             if (_view == null) return;
             var ai = _view.CombatUnitAI;
-            if (ai != null && ai.IsSetup) ai.StopAI(dead);
+            if (ai != null && ai.IsSetup) ai.StopAI(dead, interrupt);
             if (pauseAnimation) _view.AnimationTimeController?.Pause();
         }
 
-        /// <summary>Starts the unit's AI and animation; a stunned unit stays still until its last stun ends.</summary>
+        /// <summary>
+        /// Starts the unit's AI and animation; a stunned or held unit (<see cref="HoldAI"/>) stays still until its
+        /// last stun or hold ends. Safe to call on a running unit.
+        /// </summary>
         public void StartAI()
         {
-            if (_view == null || IsStunned) return;
+            if (_view == null || IsStunned || _aiHolds > 0) return;
             var ai = _view.CombatUnitAI;
             if (ai != null && ai.IsSetup) ai.StartAI();
             _view.AnimationTimeController?.Resume();
         }
 
-        // ── Controls (counted: overlapping stuns, silences and roots hold until the last ends) ──
+        // ── Controls (counted: overlapping stuns, silences, roots and holds hold until the last ends) ──
 
         private int _stuns;
         private int _silences;
         private int _roots;
+        private int _aiHolds;
+
+        /// <summary>The unit never acts while held: its AI stops (no interrupt, no pause: it idles, takes hits and
+        /// flinches) and starts again when the last hold is let go, unless a stun holds it still.</summary>
+        public IDisposable HoldAI()
+        {
+            if (_aiHolds++ == 0) StopAI(false, false, interrupt: false);
+            return new AIHold(this);
+        }
+
+        private void ReleaseAI()
+        {
+            if (_aiHolds == 0) throw new InvalidOperationException($"[CombatUnit] '{Key}' lets go of an AI hold it does not have.");
+            if (--_aiHolds == 0 && IsAlive) StartAI();
+        }
+
+        private sealed class AIHold : IDisposable
+        {
+            private CombatUnit _unit;
+            public AIHold(CombatUnit unit) => _unit = unit;
+            public void Dispose() { CombatUnit unit = _unit; _unit = null; unit?.ReleaseAI(); }
+        }
 
         public bool IsStunned => _stuns > 0;
         public bool IsSilenced => _silences > 0;
@@ -478,7 +507,9 @@ namespace CupkekGames.Combat
             _stuns = 0;
             _silences = 0;
             _roots = 0;
-            _interruptToken?.Cancel();
+            _aiHolds = 0;
+            // The interrupt token is disposed, not cancelled: a clip the unit's last action plays goes on (the
+            // killing swing under the win, the fall's own clip over an attack).
             _interruptToken?.Dispose();
             _interruptToken = null;
             _deathToken?.Cancel();

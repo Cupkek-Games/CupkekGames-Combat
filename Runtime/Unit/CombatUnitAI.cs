@@ -44,8 +44,6 @@ namespace CupkekGames.Combat
     private CombatActionSO _lastAction;
     // The selected ultimate has begun to cast (a silence no longer drops it).
     private bool _ultimateStarted;
-    // The current run has had its first tick (OnActionStarted is told once per run).
-    private bool _runStarted;
 
     private float _cooldown = 0;
 
@@ -90,6 +88,8 @@ namespace CupkekGames.Combat
         Debug.LogError($"[CombatUnitAI] StartAI refused on '{gameObject.name}': the unit is not fully initialized (no death token). Call SetupAI on an initialized unit before StartAI.", this);
         return;
       }
+      // Started twice (a hold let go under a stun's end): one drive, never two.
+      if (_running) return;
 
       if (_debug)
       {
@@ -104,7 +104,11 @@ namespace CupkekGames.Combat
       _mover.Start(_caster.TimeBundle);
     }
 
-    public void StopAI(bool dead)
+    /// <summary>
+    /// Stops the unit. <paramref name="interrupt"/> (a stun, a pause) cuts the clip its action plays; the fight's
+    /// end is no interrupt, so the killing swing lands.
+    /// </summary>
+    public void StopAI(bool dead, bool interrupt = true)
     {
       if (_debug)
       {
@@ -135,7 +139,7 @@ namespace CupkekGames.Combat
 
           _runner = null;
         }
-        else
+        else if (interrupt)
         {
           _caster.InterruptAI();
         }
@@ -225,7 +229,6 @@ namespace CupkekGames.Combat
 
       _action = action;
       _lastAction = action;
-      _runStarted = false;
       _runner = _caster.View.Runners[action];
 
       // A fresh source per run: every hit of this run names it.
@@ -287,11 +290,10 @@ namespace CupkekGames.Combat
     /// </summary>
     private void ExecuteCurrentAction(float deltaTime)
     {
-      if (_actionType == CombatActionType.Ultimate) _ultimateStarted = true;
-      if (!_runStarted)
+      if (_actionType == CombatActionType.Ultimate && !_ultimateStarted)
       {
-        _runStarted = true;
-        _combatManager.EventDatabase.InvokeOnActionStarted(_caster, _action, _actionType);
+        _ultimateStarted = true;
+        _combatManager.EventDatabase.InvokeOnUltimate(_caster, _action, UltimatePhase.Started);
         // A listener may have stopped the unit.
         if (_runner == null) return;
       }
@@ -369,11 +371,11 @@ namespace CupkekGames.Combat
     {
       int normal = _combatSettings.DefaultActionTypeId;
       _actionType = _silenced || !_caster.CanCastUltimate ? normal : _caster.Mana.GetNextActionType();
-      CombatActionSO action = _caster.GetCombatAction(_actionType, _combatManager, _caster, _primaryTarget, _lastAction);
+      CombatActionSO action = _caster.GetCombatAction(_actionType, _combatManager, _caster, _primaryTarget, _combatSettings.AlternateTiedActions ? _lastAction : null);
       if (action == null && _actionType != normal)
       {
         _actionType = normal;
-        action = _caster.GetCombatAction(normal, _combatManager, _caster, _primaryTarget, _lastAction);
+        action = _caster.GetCombatAction(normal, _combatManager, _caster, _primaryTarget, _combatSettings.AlternateTiedActions ? _lastAction : null);
       }
 
       return action ?? throw new InvalidOperationException($"[CombatUnitAI] '{_caster.DataReference.Key}' has no action that can pick anyone in its normal slot ({normal}).");
